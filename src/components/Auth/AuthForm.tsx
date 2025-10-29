@@ -1,0 +1,210 @@
+import React, { useState } from 'react';
+import { Button } from '../ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { RecMapLogo } from '../RecMapLogo';
+import { ArrowLeft, Users, FileText, Leaf, Eye, EyeOff } from 'lucide-react';
+import { UserType, AuthMode } from '../../App';
+
+interface AuthFormProps {
+  userType: UserType;
+  authMode: AuthMode;
+  onAuth: (userData: { name: string; email: string; password: string }) => void;
+  onModeChange: (mode: AuthMode) => void;
+  onBack: () => void;
+}
+
+export function AuthForm({ userType, authMode, onAuth, onModeChange, onBack }: AuthFormProps) {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authMode === 'register' && formData.password !== formData.confirmPassword) {
+      alert('Senhas não coincidem!');
+      return;
+    }
+    onAuth(formData);
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const isGovernment = userType === 'government';
+  const userTypeLabel = isGovernment ? 'Gestor Público' : 'Cidadão';
+  const userTypeIcon = isGovernment ? FileText : Users;
+  const UserIcon = userTypeIcon;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#DDEB9D] via-white to-[#A0C878] flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center gap-3">
+            <RecMapLogo size="2xl" variant="light" />
+          </div>
+        </div>
+
+        <Card className="shadow-xl border-2 border-[#A0C878]">
+          <CardHeader className="text-center">
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+              isGovernment ? 'bg-[#143D60]' : 'bg-[#A0C878]'
+            }`}>
+              <UserIcon className="w-8 h-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl text-[#143D60]">
+              {authMode === 'login' ? 'Entrar' : 'Cadastrar'}
+            </CardTitle>
+            <CardDescription className="text-lg">
+              Acesso para {userTypeLabel}
+            </CardDescription>
+          </CardHeader>
+
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {authMode === 'register' && (
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nome Completo</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Digite seu nome completo"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    required
+                    className="border-[#A0C878] focus:border-[#143D60]"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder={isGovernment ? "seu.email@prefeitura.gov.br" : "seu.email@exemplo.com"}
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  required
+                  className="border-[#A0C878] focus:border-[#143D60]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Digite sua senha"
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
+                    required
+                    className="border-[#A0C878] focus:border-[#143D60] pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A0C878] hover:text-[#143D60] transition-colors focus:outline-none focus:ring-2 focus:ring-[#A0C878] rounded p-1"
+                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {authMode === 'register' && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirmar Senha</Label>
+                  <div className="relative">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Confirme sua senha"
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                      required
+                      className="border-[#A0C878] focus:border-[#143D60] pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A0C878] hover:text-[#143D60] transition-colors focus:outline-none focus:ring-2 focus:ring-[#A0C878] rounded p-1"
+                      aria-label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className={`w-full text-white ${
+                  isGovernment 
+                    ? 'bg-[#143D60] hover:bg-[#0F2F4A]' 
+                    : 'bg-[#A0C878] hover:bg-[#8BB668]'
+                }`}
+              >
+                {authMode === 'login' ? 'Entrar' : 'Cadastrar'}
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <p className="text-gray-600">
+                {authMode === 'login' 
+                  ? 'Não tem uma conta?' 
+                  : 'Já tem uma conta?'
+                }
+              </p>
+              <Button
+                variant="link"
+                onClick={() => onModeChange(authMode === 'login' ? 'register' : 'login')}
+                className="text-[#143D60] hover:text-[#A0C878] p-0"
+              >
+                {authMode === 'login' ? 'Cadastre-se aqui' : 'Faça login aqui'}
+              </Button>
+            </div>
+
+            {isGovernment && (
+              <div className="mt-4 p-3 bg-[#DDEB9D] rounded-lg">
+                <p className="text-sm text-[#143D60]">
+                  <strong>Acesso Governamental:</strong> Este acesso é destinado a gestores públicos e órgãos ambientais.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        
+        {/* Botão Voltar */}
+        <div className="mt-6 text-center">
+          <Button
+            variant="ghost"
+            onClick={onBack}
+            className="text-[#143D60] hover:bg-[#143D60] hover:text-white"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
