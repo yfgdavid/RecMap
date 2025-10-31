@@ -29,21 +29,11 @@ export default function App() {
     setAuthMode('register');
   };
 
-  const handleAuth = (userData: { name: string; email: string; password: string }) => {
-    // Simular autenticação
-    const user: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      name: userData.name,
-      email: userData.email,
-      type: selectedUserType!
-    };
-    setCurrentUser(user);
-  };
-
   const handleLogout = () => {
     setCurrentUser(null);
     setSelectedUserType(null);
     setAuthMode('login');
+    localStorage.removeItem('token'); // limpa token
   };
 
   const handleBackToLanding = () => {
@@ -62,7 +52,7 @@ export default function App() {
       <AuthForm
         userType={selectedUserType}
         authMode={authMode}
-        onAuth={handleAuth}
+        onLoginSuccess={setCurrentUser} // ✅ recebe User diretamente
         onModeChange={setAuthMode}
         onBack={handleBackToLanding}
       />
@@ -70,9 +60,11 @@ export default function App() {
   }
 
   // Se há usuário logado, mostra dashboard apropriado
-  if (currentUser?.type === 'government') {
+ if (currentUser) {
+  if (currentUser.type === 'government') {
     return <Dashboard user={currentUser} onLogout={handleLogout} />;
   } else {
     return <CitizenDashboard user={currentUser} onLogout={handleLogout} />;
   }
+}
 }

@@ -1,8 +1,9 @@
 // src/components/MapComponent.tsx
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useState, useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import api from "../services/api";
 
 // Limites e centro do Recife
 const recifeCenter: [number, number] = [-8.0476, -34.877];
@@ -11,34 +12,34 @@ const recifeBounds: [[number, number], [number, number]] = [
   [-7.95, -34.80],
 ];
 
-// Dados mockados de marcadores
-interface MarkerData {
+// Tipos de dados
+interface Denuncia {
   id: number;
-  position: [number, number];
-  title: string;
-  type: 'denuncia' | 'certo' | 'encaminhada';
+  titulo: string;
+  descricao: string;
+  latitude: number;
+  longitude: number;
+  status: string;
 }
 
-const markers: MarkerData[] = [
-  { id: 1, position: [-8.045, -34.875], title: 'Denúncia', type: 'denuncia' },
-  { id: 2, position: [-8.050, -34.880], title: 'Local de descarte correto', type: 'certo' },
-  { id: 3, position: [-8.042, -34.870], title: 'Denuncia encaminhada', type: 'encaminhada' },
-];
+interface PontoColeta {
+  id: number;
+  titulo: string;
+  descricao: string;
+  tipo_residuo: string;
+  latitude: number;
+  longitude: number;
+}
 
-// Função para retornar cor do marcador
-const getMarkerColor = (type: MarkerData['type']) => {
-  switch (type) {
-    case 'denuncia': return '#FF2C2C';
-    case 'certo': return '#069240';
-    case 'encaminhada': return '#FFA500';
-    default: return '#0000FF';
-  }
-};
+interface MapaData {
+  denuncias: Denuncia[];
+  pontos: PontoColeta[];
+}
 
 // Criar ícone colorido
 const createColoredIcon = (color: string) =>
   L.divIcon({
-    className: '',
+    className: "",
     html: `<div style="
       background-color:${color};
       width:20px;
@@ -51,26 +52,63 @@ const createColoredIcon = (color: string) =>
     iconAnchor: [10, 10],
   });
 
-// Componente para centralizar mapa na posição do usuário
+// Centralizar mapa na posição do usuário
 const FlyToUser = ({ position }: { position: [number, number] }) => {
   const map = useMap();
   useEffect(() => {
-    if (position) {
-      map.flyTo(position, 16); // zoom 16
-    }
+    if (position) map.flyTo(position, 16);
   }, [position, map]);
   return null;
 };
 
 const MapComponent = () => {
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
+  const [dadosMapa, setDadosMapa] = useState<MapaData>({ denuncias: [], pontos: [] });
 
-  // Pegar localização do usuário
+  // Buscar dados do backend
+  useEffect(() => {
+    async function carregarMapa() {
+      try {
+        const res = await api.get("/mapa");
+        const data = res.data;
+
+        // Mapear denúncias e deslocar levemente se estiverem na mesma posição
+        const denuncias: Denuncia[] = data
+          .filter((item: any) => item.tipo === "denuncia")
+          .map((d: any, i: number) => ({
+            id: d.id,
+            titulo: d.titulo,
+            descricao: d.descricao,
+            latitude: d.latitude + i * 0.00005, // pequeno deslocamento
+            longitude: d.longitude + i * 0.00005,
+            status: d.status || "PENDENTE",
+          }));
+
+        const pontos: PontoColeta[] = data
+          .filter((item: any) => item.tipo === "ponto")
+          .map((p: any) => ({
+            id: p.id,
+            titulo: p.titulo,
+            descricao: p.descricao,
+            tipo_residuo: p.tipo_residuo || "",
+            latitude: p.latitude,
+            longitude: p.longitude,
+          }));
+
+        setDadosMapa({ denuncias, pontos });
+      } catch (error) {
+        console.error("Erro ao carregar dados do mapa:", error);
+      }
+    }
+    carregarMapa();
+  }, []);
+
+  // Obter localização do usuário
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => setUserPosition([pos.coords.latitude, pos.coords.longitude]),
-        (err) => console.warn('Não foi possível obter localização:', err),
+        (err) => console.warn("Não foi possível obter localização:", err),
         { enableHighAccuracy: true }
       );
     }
@@ -82,24 +120,44 @@ const MapComponent = () => {
       zoom={15}
       minZoom={14}
       maxZoom={18}
-      style={{ height: '500px', width: '100%' }}
+      style={{ height: "500px", width: "100%" }}
       maxBounds={recifeBounds}
       maxBoundsViscosity={1.0}
     >
-      {/* Mapa base */}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {/* Marcadores de coleta */}
-      {markers.map((marker) => (
+      {/* Marcadores de Denúncias */}
+      {dadosMapa.denuncias.map((denuncia) => (
         <Marker
-          key={marker.id}
-          position={marker.position}
-          icon={createColoredIcon(getMarkerColor(marker.type))}
+          key={`den-${denuncia.id}`}
+          position={[denuncia.latitude, denuncia.longitude]}
+          icon={createColoredIcon(
+            denuncia.status.toLowerCase() === "encaminhada" ? "#FFA500" : "#FF2C2C"
+          )}
         >
-          <Popup>{marker.title}</Popup>
+          <Popup>
+            <strong>{denuncia.titulo}</strong>
+            <br />
+            {denuncia.descricao}
+          </Popup>
+        </Marker>
+      ))}
+
+      {/* Marcadores de Pontos de Coleta */}
+      {dadosMapa.pontos.map((ponto) => (
+        <Marker
+          key={`ponto-${ponto.id}`}
+          position={[ponto.latitude, ponto.longitude]}
+          icon={createColoredIcon("#069240")}
+        >
+          <Popup>
+            <strong>{ponto.titulo}</strong>
+            <br />
+            {ponto.tipo_residuo}
+          </Popup>
         </Marker>
       ))}
 
@@ -110,7 +168,7 @@ const MapComponent = () => {
           <Marker
             position={userPosition}
             icon={L.icon({
-              iconUrl: 'https://cdn-icons-png.flaticon.com/512/64/64113.png', // ícone do usuário
+              iconUrl: "https://cdn-icons-png.flaticon.com/512/64/64113.png",
               iconSize: [30, 30],
               iconAnchor: [15, 30],
             })}

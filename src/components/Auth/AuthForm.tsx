@@ -4,18 +4,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { RecMapLogo } from '../RecMapLogo';
-import { ArrowLeft, Users, FileText, Leaf, Eye, EyeOff } from 'lucide-react';
-import { UserType, AuthMode } from '../../App';
+import { ArrowLeft, Users, FileText, Eye, EyeOff } from 'lucide-react';
+import { UserType, AuthMode, User } from '../../App';
 
 interface AuthFormProps {
   userType: UserType;
   authMode: AuthMode;
-  onAuth: (userData: { name: string; email: string; password: string }) => void;
   onModeChange: (mode: AuthMode) => void;
   onBack: () => void;
+  onLoginSuccess?: (user: User) => void; // ✅ recebe User
 }
 
-export function AuthForm({ userType, authMode, onAuth, onModeChange, onBack }: AuthFormProps) {
+export function AuthForm({
+  userType,
+  authMode,
+  onModeChange,
+  onBack,
+  onLoginSuccess = () => {}
+}: AuthFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,32 +32,73 @@ export function AuthForm({ userType, authMode, onAuth, onModeChange, onBack }: A
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (authMode === 'register' && formData.password !== formData.confirmPassword) {
-      alert('Senhas não coincidem!');
-      return;
-    }
-    onAuth(formData);
-  };
-
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (authMode === 'register' && formData.password !== formData.confirmPassword) {
+      alert('Senhas não coincidem!');
+      return;
+    }
+
+    const payload = {
+      nome: formData.name,
+      email: formData.email,
+      senha: formData.password,
+      tipo_usuario: userType === 'government' ? 'GOVERNAMENTAL' : 'CIDADAO'
+    };
+
+    try {
+      const url = authMode === 'register' ? '/auth/register' : '/auth/login';
+      const res = await fetch(`http://localhost:3333${url}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json().catch(() => {
+        throw new Error('Resposta inválida do servidor');
+      });
+
+      if (!res.ok) {
+        alert(data.message || 'Erro ao autenticar');
+        return;
+      }
+
+      if (authMode === 'login') {
+        // ✅ criar User a partir do retorno do backend
+        const user: User = {
+          id: data.user.id_usuario,
+          name: data.user.nome,
+          email: data.user.email,
+          type: userType
+        };
+
+        localStorage.setItem('token', data.token); // guardar token
+        onLoginSuccess?.(user);
+        alert('Login realizado com sucesso!');
+      } else {
+        alert('Cadastro realizado com sucesso! Faça login.');
+        onModeChange('login');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Erro na requisição: ' + error);
+    }
+  };
+
   const isGovernment = userType === 'government';
   const userTypeLabel = isGovernment ? 'Gestor Público' : 'Cidadão';
-  const userTypeIcon = isGovernment ? FileText : Users;
-  const UserIcon = userTypeIcon;
+  const UserIcon = isGovernment ? FileText : Users;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#DDEB9D] via-white to-[#A0C878] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3">
-            <RecMapLogo size="2xl" variant="light" />
-          </div>
+          <RecMapLogo size="2xl" variant="light" />
         </div>
 
         <Card className="shadow-xl border-2 border-[#A0C878]">
@@ -115,13 +162,8 @@ export function AuthForm({ userType, authMode, onAuth, onModeChange, onBack }: A
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A0C878] hover:text-[#143D60] transition-colors focus:outline-none focus:ring-2 focus:ring-[#A0C878] rounded p-1"
-                    aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
@@ -143,13 +185,8 @@ export function AuthForm({ userType, authMode, onAuth, onModeChange, onBack }: A
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A0C878] hover:text-[#143D60] transition-colors focus:outline-none focus:ring-2 focus:ring-[#A0C878] rounded p-1"
-                      aria-label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
                 </div>
@@ -158,9 +195,7 @@ export function AuthForm({ userType, authMode, onAuth, onModeChange, onBack }: A
               <Button
                 type="submit"
                 className={`w-full text-white ${
-                  isGovernment 
-                    ? 'bg-[#143D60] hover:bg-[#0F2F4A]' 
-                    : 'bg-[#A0C878] hover:bg-[#8BB668]'
+                  isGovernment ? 'bg-[#143D60] hover:bg-[#0F2F4A]' : 'bg-[#A0C878] hover:bg-[#8BB668]'
                 }`}
               >
                 {authMode === 'login' ? 'Entrar' : 'Cadastrar'}
@@ -169,10 +204,7 @@ export function AuthForm({ userType, authMode, onAuth, onModeChange, onBack }: A
 
             <div className="mt-6 text-center">
               <p className="text-gray-600">
-                {authMode === 'login' 
-                  ? 'Não tem uma conta?' 
-                  : 'Já tem uma conta?'
-                }
+                {authMode === 'login' ? 'Não tem uma conta?' : 'Já tem uma conta?'}
               </p>
               <Button
                 variant="link"
@@ -192,8 +224,7 @@ export function AuthForm({ userType, authMode, onAuth, onModeChange, onBack }: A
             )}
           </CardContent>
         </Card>
-        
-        {/* Botão Voltar */}
+
         <div className="mt-6 text-center">
           <Button
             variant="ghost"
