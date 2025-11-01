@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Progress } from '../ui/progress';
 import { HistoryTimeline } from '../Education/HistoryTimeline';
 import { RecMapLogo } from '../RecMapLogo';
+import { useEffect } from 'react';
 
 import { 
   MapPin, Camera, Send, History, Award, TrendingUp,
@@ -55,19 +56,63 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [activeTab, setActiveTab] = useState('map');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [newReport, setNewReport] = useState({
-    title: '',
-    description: '',
-    location: '',
-    type: ''
-  });
+  title: '',
+  description: '',
+  location: '',
+  type: '',
+  image: null as File | null,
+});
+
 
   // Dados mockados
-  const collectionPoints: CollectionPoint[] = [
-    { id: 1, name: 'Ponto de Coleta Boa Vista', type: 'reciclable', address: 'Rua da Aurora, 123', distance: '0.5 km', status: 'active' },
-    { id: 2, name: 'Coleta Orgânica Mercado', type: 'organic', address: 'Av. Conde da Boa Vista, 456', distance: '0.8 km', status: 'active' },
-    { id: 3, name: 'Descarte Eletrônicos', type: 'electronic', address: 'Shopping Center Recife', distance: '1.2 km', status: 'maintenance' },
-    { id: 4, name: 'Ponto Coleta Seletiva', type: 'reciclable', address: 'Praça do Derby, 789', distance: '1.5 km', status: 'full' }
-  ];
+  
+
+const [collectionPoints, setCollectionPoints] = useState<CollectionPoint[]>([]);
+
+useEffect(() => {
+  const fetchMapData = async () => {
+    try {
+      const res = await fetch('http://localhost:3333/mapa');
+      if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
+      const data = await res.json();
+
+      // Transforma pontos e denúncias no mesmo formato
+      const allItems: CollectionPoint[] = data.map((item: any) => {
+        if (item.tipo === 'ponto') {
+          return {
+            id: item.id,
+            name: item.titulo,
+            type: 'ponto',
+            address: item.descricao,
+            status: 'active'
+          };
+        } else if (item.tipo === 'denuncia') {
+          return {
+            id: item.id,
+            name: item.titulo,
+            type: 'denuncia',
+            address: item.descricao,
+            status: item.status.toLowerCase()
+          };
+        }
+        return null;
+      }).filter(Boolean) as CollectionPoint[];
+
+      // Mantém apenas os 5 mais recentes
+      const latestFive = allItems.slice(-5).reverse();
+      setCollectionPoints(latestFive);
+
+    } catch (error) {
+      console.error('Erro ao buscar dados do mapa:', error);
+    }
+  };
+
+  fetchMapData();
+  const interval = setInterval(fetchMapData, 10000);
+  return () => clearInterval(interval);
+}, []);
+
+
 
   const userReports: Report[] = [
     { id: 1, title: 'Lixo acumulado na Rua da Aurora', description: 'Grande quantidade de lixo...', status: 'validated', date: '2024-10-05', location: 'Centro', votes: 8 },
@@ -113,12 +158,6 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
     }
   };
 
-  const handleSubmitReport = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Simular envio de denúncia
-    alert('Denúncia enviada com sucesso!');
-    setNewReport({ title: '', description: '', location: '', type: '' });
-  };
 
   const handleValidateReport = (reportId: number, vote: 'confirm' | 'reject') => {
     alert(`Voto registrado: ${vote === 'confirm' ? 'Confirmado' : 'Contestado'}`);
@@ -282,82 +321,149 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
           </TabsContent>
 
           {/* Registrar Denúncia */}
-          <TabsContent value="report" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-[#143D60]">Registrar Nova Denúncia</CardTitle>
-                <CardDescription>Relate problemas ambientais em sua região</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmitReport} className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Título da Denúncia</label>
-                    <Input
-                      placeholder="Ex: Lixo acumulado na rua..."
-                      value={newReport.title}
-                      onChange={(e) => setNewReport({...newReport, title: e.target.value})}
-                      required
-                    />
-                  </div>
+     <TabsContent value="report" className="space-y-6">
+  <Card>
+    <CardHeader>
+      <CardTitle className="text-[#143D60]">Registrar Nova Denúncia</CardTitle>
+      <CardDescription>Relate problemas ambientais em sua região</CardDescription>
+    </CardHeader>
 
-                   <Select 
-                  value={newReport.type} 
-                  onValueChange={(value: string) => setNewReport({...newReport, type: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="lixo-irregular">Descarte Irregular</SelectItem>
-                    <SelectItem value="ponto-danificado">Ponto de Coleta Danificado</SelectItem>
-                    <SelectItem value="entulho">Entulho</SelectItem>
-                    <SelectItem value="esgoto">Esgoto a Céu Aberto</SelectItem>
-                    <SelectItem value="outros">Outros</SelectItem>
-                  </SelectContent>
-                </Select>
+    <CardContent>
+  <form
+    onSubmit={async (e) => {
+      e.preventDefault();
 
+      const formData = new FormData();
+      formData.append("id_usuario", user.id); // id já é string
+      formData.append("titulo", newReport.title);
+      formData.append("descricao", newReport.description);
+      formData.append("localizacao", newReport.location);
+      if (newReport.image) formData.append("foto", newReport.image);
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Localização</label>
-                    <Input
-                      placeholder="Ex: Rua da Aurora, 123, Centro"
-                      value={newReport.location}
-                      onChange={(e) => setNewReport({...newReport, location: e.target.value})}
-                      required
-                    />
-                  </div>
+      console.log("FormData enviado:");
+for (const pair of formData.entries()) {
+  console.log(pair[0], pair[1]);
+}
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Descrição</label>
-                    <Textarea
-                      placeholder="Descreva detalhadamente o problema encontrado..."
-                      value={newReport.description}
-                      onChange={(e) => setNewReport({...newReport, description: e.target.value})}
-                      rows={4}
-                      required
-                    />
-                  </div>
+      try {
+        const res = await fetch("http://localhost:3333/denuncias", {
+          method: "POST",
+          body: formData, // ✅ não colocar headers
+        });
 
-                  <div className="flex items-center gap-4 p-4 bg-[#DDEB9D] rounded-lg">
-                    <Camera className="w-8 h-8 text-[#143D60]" />
-                    <div>
-                      <p className="font-medium text-[#143D60]">Adicionar Foto</p>
-                      <p className="text-sm text-gray-600">Adicione evidências fotográficas (opcional)</p>
-                    </div>
-                    <Button type="button" variant="outline" className="ml-auto">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Foto
-                    </Button>
-                  </div>
+        if (!res.ok) throw new Error("Erro ao enviar denúncia");
 
-                  <Button type="submit" className="w-full bg-[rgba(20,61,96,1)] hover:bg-[#D54E00] text-white">
-                    <Send className="w-4 h-4 mr-2" />
-                    Enviar Denúncia
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
+        alert("✅ Denúncia enviada com sucesso!");
+        setNewReport({ title: "", description: "", location: "", type: "", image: null });
+      } catch (err) {
+        alert("❌ Falha ao enviar denúncia.");
+        console.error(err);
+      }
+    }}
+    className="space-y-4"
+    encType="multipart/form-data" // ✅ ESSENCIAL
+  >
+    {/* Título */}
+    <div className="space-y-2">
+      <label className="text-sm font-medium">Título da Denúncia</label>
+      <Input
+        placeholder="Ex: Lixo acumulado na rua..."
+        value={newReport.title}
+        onChange={(e) => setNewReport({ ...newReport, title: e.target.value })}
+        required
+      />
+    </div>
+
+    {/* Tipo */}
+    <Select
+      value={newReport.type}
+      onValueChange={(value: string) => setNewReport({ ...newReport, type: value })}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder="Selecione o tipo" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="lixo-irregular">Descarte Irregular</SelectItem>
+        <SelectItem value="ponto-danificado">Ponto de Coleta Danificado</SelectItem>
+        <SelectItem value="entulho">Entulho</SelectItem>
+        <SelectItem value="esgoto">Esgoto a Céu Aberto</SelectItem>
+        <SelectItem value="outros">Outros</SelectItem>
+      </SelectContent>
+    </Select>
+
+    {/* Localização */}
+    <div className="space-y-2">
+      <label className="text-sm font-medium">Localização</label>
+      <Input
+        placeholder="Ex: Rua da Aurora, 123, Centro"
+        value={newReport.location}
+        onChange={(e) => setNewReport({ ...newReport, location: e.target.value })}
+        required
+      />
+    </div>
+
+    {/* Descrição */}
+    <div className="space-y-2">
+      <label className="text-sm font-medium">Descrição</label>
+      <Textarea
+        placeholder="Descreva detalhadamente o problema encontrado..."
+        value={newReport.description}
+        onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
+        rows={4}
+        required
+      />
+    </div>
+
+    {/* Foto */}
+    <div className="flex items-center gap-4 p-4 bg-[#DDEB9D] rounded-lg">
+      <Camera className="w-8 h-8 text-[#143D60]" />
+      <div>
+        <p className="font-medium text-[#143D60]">Adicionar Foto</p>
+        <p className="text-sm text-gray-600">Adicione evidências fotográficas (opcional)</p>
+      </div>
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        id="foto-upload"
+        onChange={(e) =>
+          setNewReport({ ...newReport, image: e.target.files ? e.target.files[0] : null })
+        }
+      />
+      <Button
+        type="button"
+        variant="outline"
+        className="ml-auto"
+        onClick={() => document.getElementById("foto-upload")?.click()}
+      >
+        <Plus className="w-4 h-4 mr-2" />
+        Foto
+      </Button>
+    </div>
+
+    {/* Preview da imagem */}
+    {newReport.image && (
+      <div className="flex justify-center">
+        <img
+          src={URL.createObjectURL(newReport.image)}
+          alt="Preview"
+          className="max-h-48 rounded-lg border"
+        />
+      </div>
+    )}
+
+    {/* Botão enviar */}
+    <Button
+      type="submit"
+      className="w-full bg-[rgba(20,61,96,1)] hover:bg-[#D54E00] text-white"
+    >
+      <Send className="w-4 h-4 mr-2" />
+      Enviar Denúncia
+    </Button>
+  </form>
+</CardContent>
+  </Card>
+</TabsContent>
 
           {/* Minhas Denúncias */}
           <TabsContent value="my-reports" className="space-y-6">
