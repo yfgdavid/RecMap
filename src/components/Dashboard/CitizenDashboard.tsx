@@ -10,6 +10,7 @@ import { Progress } from '../ui/progress';
 import { HistoryTimeline } from '../Education/HistoryTimeline';
 import { RecMapLogo } from '../RecMapLogo';
 import { useEffect } from 'react';
+import { LocationInput } from '../LocationInput';
 
 import { 
   MapPin, Camera, Send, History, Award, TrendingUp,
@@ -144,10 +145,24 @@ useEffect(() => {
 
 
 
-  const pendingValidations: Report[] = [
-    { id_denuncia: 4, titulo: 'Descarte irregular próximo ao rio', descricao: 'Vários sacos de lixo...', status: 'PENDENTE', data_criacao: '2024-10-07', localizacao: 'Várzea', validacoes: 2 },
-    { id_denuncia: 5, titulo: 'Esgoto a céu aberto', descricao: 'Vazamento de esgoto...', status: 'PENDENTE', data_criacao: '2024-10-06', localizacao: 'Imbiribeira', validacoes: 5 }
-  ];
+ const [pendingValidations, setPendingValidations] = useState<Report[]>([]);
+
+ const carregarDenunciasPendentes = async () => {
+  try {
+    const res = await fetch(`http://localhost:3333/denuncias/pendentes/${user.id}`);
+    if (!res.ok) throw new Error("Erro ao buscar denúncias pendentes");
+    const data = await res.json();
+    setPendingValidations(data);
+  } catch (err) {
+    console.error("Erro ao carregar denúncias pendentes:", err);
+  }
+};
+
+useEffect(() => {
+  if (user?.id) carregarDenunciasPendentes();
+}, [user?.id]);
+
+
 
   const [educationalContent, setEducationalContent] = useState([
   { title: 'Como separar resíduos corretamente', type: 'Vídeo', duration: '2 min', completed: false, url:'https://www.youtube.com/watch?v=o1HzpLHYEmE' },
@@ -183,9 +198,44 @@ useEffect(() => {
   };
 
 
-  const handleValidateReport = (reportId: number, vote: 'confirm' | 'reject') => {
-    alert(`Voto registrado: ${vote === 'confirm' ? 'Confirmado' : 'Contestado'}`);
-  };
+ const handleValidateReport = async (reportId: number, vote: 'confirm' | 'reject') => {
+  try {
+    
+    const res = await fetch('http://localhost:3333/validacoes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id_usuario: user.id,
+        id_denuncia: reportId,
+        tipo_validacao: vote === 'confirm' ? 'CONFIRMAR' : 'CONTESTAR',
+      }),
+    });
+
+    if (!res.ok) throw new Error('Erro ao validar denúncia');
+
+    const novaValidacao = await res.json();
+
+    alert(`✅ Denúncia ${vote === 'confirm' ? 'confirmada' : 'contestada'}!`);
+
+    setPendingValidations(prev => prev.filter(report => report.id_denuncia !== reportId));
+
+    setUserReports(prev =>
+      prev.map(report => {
+        if (report.id_denuncia === reportId) {
+          return {
+            ...report,
+            validacoes: [...report.validacoes, novaValidacao], // adiciona a validação
+          };
+        }
+        return report;
+      })
+    );
+  } catch (err) {
+    console.error('Erro ao validar denúncia:', err);
+    alert('❌ Falha ao validar denúncia.');
+  }
+};
+
 
   const filteredPoints = collectionPoints.filter(point => 
     selectedFilter === 'all' || point.type === selectedFilter
@@ -417,14 +467,13 @@ for (const pair of formData.entries()) {
       </SelectContent>
     </Select>
 
+
     {/* Localização */}
     <div className="space-y-2">
       <label className="text-sm font-medium">Localização</label>
-      <Input
-        placeholder="Ex: Rua da Aurora, 123, Centro"
+      <LocationInput
         value={newReport.location}
-        onChange={(e) => setNewReport({ ...newReport, location: e.target.value })}
-        required
+        onChange={(val) => setNewReport({ ...newReport, location: val })}
       />
     </div>
 
