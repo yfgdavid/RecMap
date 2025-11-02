@@ -43,14 +43,23 @@ interface CollectionPoint {
 }
 
 interface Report {
-  id: number;
-  title: string;
-  description: string;
-  status: 'pending' | 'validated' | 'resolved';
-  date: string;
-  location: string;
-  votes: number;
+  id_denuncia: number;
+  titulo: string;
+  descricao: string;
+  localizacao: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  foto?: string | null;
+  status: "PENDENTE" | "VALIDADA" | "ENCAMINHADA" | "RESOLVIDA";
+  data_criacao: string;
+  validacoes: {
+    id_validacao: number;
+    id_usuario: number;
+    tipo_validacao: "CONFIRMAR" | "CONTESTAR";
+    data_validacao: string;
+  }[];
 }
+
 
 export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [activeTab, setActiveTab] = useState('map');
@@ -114,15 +123,30 @@ useEffect(() => {
 
 
 
-  const userReports: Report[] = [
-    { id: 1, title: 'Lixo acumulado na Rua da Aurora', description: 'Grande quantidade de lixo...', status: 'validated', date: '2024-10-05', location: 'Centro', votes: 8 },
-    { id: 2, title: 'Entulho em terreno baldio', description: 'Materiais de construção...', status: 'pending', date: '2024-10-07', location: 'Boa Vista', votes: 3 },
-    { id: 3, title: 'Ponto de coleta danificado', description: 'Container de lixo quebrado...', status: 'resolved', date: '2024-10-01', location: 'Derby', votes: 12 }
-  ];
+  const [userReports, setUserReports] = useState<Report[]>([]);
+
+
+const carregarDenuncias = async () => {
+  try {
+    const res = await fetch(`http://localhost:3333/denuncias/usuario/${user.id}`);
+    if (!res.ok) throw new Error("Erro ao buscar denúncias");
+    const data = await res.json();
+    setUserReports(data);
+  } catch (err) {
+    console.error("Erro ao carregar denúncias:", err);
+  }
+};
+
+
+useEffect(() => {
+  if (user?.id) carregarDenuncias();
+}, [user?.id]);
+
+
 
   const pendingValidations: Report[] = [
-    { id: 4, title: 'Descarte irregular próximo ao rio', description: 'Vários sacos de lixo...', status: 'pending', date: '2024-10-07', location: 'Várzea', votes: 2 },
-    { id: 5, title: 'Esgoto a céu aberto', description: 'Vazamento de esgoto...', status: 'pending', date: '2024-10-06', location: 'Imbiribeira', votes: 5 }
+    { id_denuncia: 4, titulo: 'Descarte irregular próximo ao rio', descricao: 'Vários sacos de lixo...', status: 'PENDENTE', data_criacao: '2024-10-07', localizacao: 'Várzea', validacoes: 2 },
+    { id_denuncia: 5, titulo: 'Esgoto a céu aberto', descricao: 'Vazamento de esgoto...', status: 'PENDENTE', data_criacao: '2024-10-06', localizacao: 'Imbiribeira', validacoes: 5 }
   ];
 
   const [educationalContent, setEducationalContent] = useState([
@@ -355,10 +379,12 @@ for (const pair of formData.entries()) {
 
         alert("✅ Denúncia enviada com sucesso!");
         setNewReport({ title: "", description: "", location: "", type: "", image: null });
+          await carregarDenuncias();
       } catch (err) {
         alert("❌ Falha ao enviar denúncia.");
         console.error(err);
       }
+    
     }}
     className="space-y-4"
     encType="multipart/form-data" // ✅ ESSENCIAL
@@ -474,25 +500,42 @@ for (const pair of formData.entries()) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {userReports.map((report) => (
-                    <div key={report.id} className="p-4 border rounded-lg hover:bg-gray-50">
+                              {userReports.length === 0 ? (
+                  <p className="text-sm text-gray-500">
+                    Você ainda não fez nenhuma denúncia.
+                  </p>
+                ) : (
+                  userReports.map((report) => (
+                    <div
+                      key={report.id_denuncia}
+                      className="p-4 border rounded-lg hover:bg-gray-50"
+                    >
                       <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-medium text-[#143D60]">{report.title}</h4>
+                        <h4 className="font-medium text-[#143D60]">{report.titulo}</h4>
                         <Badge className={`${getStatusColor(report.status)} text-white`}>
-                          {report.status === 'pending' ? 'Pendente' : 
-                           report.status === 'validated' ? 'Validada' : 'Resolvida'}
+                          {report.status === "PENDENTE"
+                            ? "Pendente"
+                            : report.status === "VALIDADA"
+                            ? "Validada"
+                            : report.status === "ENCAMINHADA"
+                            ? "Encaminhada"
+                            : "Resolvida"}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">{report.description}</p>
+                      <p className="text-sm text-gray-600 mb-2">{report.descricao}</p>
                       <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>{report.location} • {report.date}</span>
+                        <span>
+                          {report.localizacao || "Localização não informada"} •{" "}
+                          {new Date(report.data_criacao).toLocaleDateString("pt-BR")}
+                        </span>
                         <div className="flex items-center gap-1">
                           <Star className="w-3 h-3" />
-                          <span>{report.votes} validações</span>
+                          <span>{report.validacoes?.length || 0} validações</span>
                         </div>
                       </div>
                     </div>
-                  ))}
+                  ))
+                )}
                 </div>
               </CardContent>
             </Card>
@@ -508,25 +551,25 @@ for (const pair of formData.entries()) {
               <CardContent>
                 <div className="space-y-4">
                   {pendingValidations.map((report) => (
-                    <div key={report.id} className="p-4 border rounded-lg">
-                      <h4 className="font-medium text-[#143D60] mb-2">{report.title}</h4>
-                      <p className="text-sm text-gray-600 mb-3">{report.description}</p>
+                    <div key={report.id_denuncia} className="p-4 border rounded-lg">
+                      <h4 className="font-medium text-[#143D60] mb-2">{report.titulo}</h4>
+                      <p className="text-sm text-gray-600 mb-3">{report.descricao}</p>
                       <div className="flex items-center justify-between">
                         <div className="text-xs text-gray-500">
-                          {report.location} • {report.date} • {report.votes} validações
+                          {report.localizacao} • {report.data_criacao} • <span>{report.validacoes?.length ?? 0} validações</span>
                         </div>
                         <div className="flex gap-2">
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => handleValidateReport(report.id, 'reject')}
+                            onClick={() => handleValidateReport(report.id_denuncia, 'reject')}
                             className="border-red-500 text-red-500 hover:bg-red-50"
                           >
                             Contestar
                           </Button>
                           <Button 
                             size="sm" 
-                            onClick={() => handleValidateReport(report.id, 'confirm')}
+                            onClick={() => handleValidateReport(report.id_denuncia, 'confirm')}
                             className="bg-[#A0C878] hover:bg-[#8BB668] text-white"
                           >
                             Confirmar
