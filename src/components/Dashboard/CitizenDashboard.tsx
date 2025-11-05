@@ -73,6 +73,14 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   image: null as File | null,
 });
 
+const [newRegister, setNewRegister] = useState({
+  title: '',
+  description: '',
+  location: '',
+  type: '',
+  image: null as File | null,
+  
+});
 
   // Dados mockados
   
@@ -90,7 +98,7 @@ useEffect(() => {
       const allItems: CollectionPoint[] = data.map((item: any) => {
         if (item.tipo === 'ponto') {
           return {
-            id: item.id,
+            id: `${item.tipo}-${item.id}`,
             name: item.titulo,
             type: 'ponto',
             address: item.descricao,
@@ -98,7 +106,7 @@ useEffect(() => {
           };
         } else if (item.tipo === 'denuncia') {
           return {
-            id: item.id,
+            id: `${item.tipo}-${item.id}`,
             name: item.titulo,
             type: 'denuncia',
             address: item.descricao,
@@ -142,6 +150,9 @@ const carregarDenuncias = async () => {
 useEffect(() => {
   if (user?.id) carregarDenuncias();
 }, [user?.id]);
+
+
+
 
 
 
@@ -257,8 +268,6 @@ useEffect(() => {
                   Olá, {user.name.split(' ')[0]}!
                 </span>
                 <div className="flex items-center gap-1 text-[#A0C878]">
-                  <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-[#A0C878]" />
-                  <span className="text-xs sm:text-base font-medium">127 pts</span>
                 </div>
               </div>
             </div>
@@ -280,46 +289,57 @@ useEffect(() => {
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Navegação Responsiva */}
-          <div className="bg-white shadow-sm rounded-lg p-2 overflow-x-auto">
-            <TabsList className="inline-flex w-full min-w-max md:grid md:grid-cols-5 gap-2 bg-transparent">
-              <TabsTrigger 
-                value="map" 
-                className="flex items-center gap-2 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-4 py-2"
-              >
-                <MapPin className="w-4 h-4" />
-                <span className="hidden sm:inline">Mapa</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="report" 
-                className="flex items-center gap-2 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-4 py-2"
-              >
-                <Camera className="w-4 h-4" />
-                <span className="hidden sm:inline">Denunciar</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="my-reports" 
-                className="flex items-center gap-2 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-4 py-2"
-              >
-                <History className="w-4 h-4" />
-                <span className="hidden sm:inline">Minhas Denúncias</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="validate" 
-                className="flex items-center gap-2 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-4 py-2"
-              >
-                <CheckCircle className="w-4 h-4" />
-                <span className="hidden sm:inline">Validar</span>
-              </TabsTrigger>
-              <TabsTrigger 
-                value="education" 
-                className="flex items-center gap-2 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-4 py-2"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span className="hidden sm:inline">Aprender</span>
-              </TabsTrigger>
-            </TabsList>
-          </div>
+         <div className="bg-white shadow-sm rounded-lg p-2 overflow-hidden">
+  <TabsList className="inline-flex flex-wrap justify-center w-full gap-2 bg-transparent">
+    <TabsTrigger 
+      value="map" 
+      className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+    >
+      <MapPin className="w-4 h-4" />
+      <span>Mapa</span>
+    </TabsTrigger>
 
+    <TabsTrigger 
+      value="report" 
+      className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+    >
+      <Camera className="w-4 h-4" />
+      <span>Denunciar</span>
+    </TabsTrigger>
+
+    <TabsTrigger 
+      value="register" 
+      className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+    >
+      <Camera className="w-4 h-4" />
+      <span>Registrar</span>
+    </TabsTrigger>
+
+    <TabsTrigger 
+      value="my-reports" 
+      className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+    >
+      <History className="w-4 h-4" />
+      <span>Minhas Denúncias</span>
+    </TabsTrigger>
+
+    <TabsTrigger 
+      value="validate" 
+      className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+    >
+      <CheckCircle className="w-4 h-4" />
+      <span>Validar</span>
+    </TabsTrigger>
+
+    <TabsTrigger 
+      value="education" 
+      className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+    >
+      <BookOpen className="w-4 h-4" />
+      <span>Aprender</span>
+    </TabsTrigger>
+  </TabsList>
+</div>
           {/* Mapa */}
           <TabsContent value="map" className="space-y-6">
             <Card>
@@ -393,9 +413,8 @@ useEffect(() => {
               </CardContent>
             </Card>
           </TabsContent>
-
-          {/* Registrar Denúncia */}
-     <TabsContent value="report" className="space-y-6">
+{/* Registrar Denúncia */}
+<TabsContent value="report" className="space-y-6">
   <Card>
     <CardHeader>
       <CardTitle className="text-[#143D60]">Registrar Nova Denúncia</CardTitle>
@@ -403,142 +422,267 @@ useEffect(() => {
     </CardHeader>
 
     <CardContent>
-  <form
-    onSubmit={async (e) => {
-      e.preventDefault();
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const formData = new FormData();
+          formData.append("id_usuario", user.id);
+          formData.append("titulo", newReport.title);
+          formData.append("descricao", newReport.description);
+          formData.append("localizacao", newReport.location);
+          if (newReport.image) formData.append("foto", newReport.image);
 
-      const formData = new FormData();
-      formData.append("id_usuario", user.id); // id já é string
-      formData.append("titulo", newReport.title);
-      formData.append("descricao", newReport.description);
-      formData.append("localizacao", newReport.location);
-      if (newReport.image) formData.append("foto", newReport.image);
-
-      console.log("FormData enviado:");
-for (const pair of formData.entries()) {
-  console.log(pair[0], pair[1]);
-}
-
-      try {
-        const res = await fetch("http://localhost:3333/denuncias", {
-          method: "POST",
-          body: formData, // ✅ não colocar headers
-        });
-
-        if (!res.ok) throw new Error("Erro ao enviar denúncia");
-
-        alert("✅ Denúncia enviada com sucesso!");
-        setNewReport({ title: "", description: "", location: "", type: "", image: null });
-          await carregarDenuncias();
-      } catch (err) {
-        alert("❌ Falha ao enviar denúncia.");
-        console.error(err);
-      }
-    
-    }}
-    className="space-y-4"
-    encType="multipart/form-data" // ✅ ESSENCIAL
-  >
-    {/* Título */}
-    <div className="space-y-2">
-      <label className="text-sm font-medium">Título da Denúncia</label>
-      <Input
-        placeholder="Ex: Lixo acumulado na rua..."
-        value={newReport.title}
-        onChange={(e) => setNewReport({ ...newReport, title: e.target.value })}
-        required
-      />
-    </div>
-
-    {/* Tipo */}
-    <Select
-      value={newReport.type}
-      onValueChange={(value: string) => setNewReport({ ...newReport, type: value })}
-    >
-      <SelectTrigger>
-        <SelectValue placeholder="Selecione o tipo" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="lixo-irregular">Descarte Irregular</SelectItem>
-        <SelectItem value="ponto-danificado">Ponto de Coleta Danificado</SelectItem>
-        <SelectItem value="entulho">Entulho</SelectItem>
-        <SelectItem value="esgoto">Esgoto a Céu Aberto</SelectItem>
-        <SelectItem value="outros">Outros</SelectItem>
-      </SelectContent>
-    </Select>
-
-
-    {/* Localização */}
-    <div className="space-y-2">
-      <label className="text-sm font-medium">Localização</label>
-      <LocationInput
-        value={newReport.location}
-        onChange={(val) => setNewReport({ ...newReport, location: val })}
-      />
-    </div>
-
-    {/* Descrição */}
-    <div className="space-y-2">
-      <label className="text-sm font-medium">Descrição</label>
-      <Textarea
-        placeholder="Descreva detalhadamente o problema encontrado..."
-        value={newReport.description}
-        onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
-        rows={4}
-        required
-      />
-    </div>
-
-    {/* Foto */}
-    <div className="flex items-center gap-4 p-4 bg-[#DDEB9D] rounded-lg">
-      <Camera className="w-8 h-8 text-[#143D60]" />
-      <div>
-        <p className="font-medium text-[#143D60]">Adicionar Foto</p>
-        <p className="text-sm text-gray-600">Adicione evidências fotográficas (opcional)</p>
-      </div>
-      <input
-        type="file"
-        accept="image/*"
-        className="hidden"
-        id="foto-upload"
-        onChange={(e) =>
-          setNewReport({ ...newReport, image: e.target.files ? e.target.files[0] : null })
-        }
-      />
-      <Button
-        type="button"
-        variant="outline"
-        className="ml-auto"
-        onClick={() => document.getElementById("foto-upload")?.click()}
+          try {
+            const res = await fetch("http://localhost:3333/denuncias", {
+              method: "POST",
+              body: formData,
+            });
+            if (!res.ok) throw new Error("Erro ao enviar denúncia");
+            alert("✅ Denúncia enviada com sucesso!");
+            setNewReport({ title: "", description: "", location: "", type: "", image: null });
+            await carregarDenuncias();
+          } catch (err) {
+            alert("❌ Falha ao enviar denúncia.");
+            console.error(err);
+          }
+        }}
+        className="space-y-4"
+        encType="multipart/form-data"
       >
-        <Plus className="w-4 h-4 mr-2" />
-        Foto
-      </Button>
-    </div>
+        {/* Título */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Título da Denúncia</label>
+          <Input
+            placeholder="Ex: Lixo acumulado na rua..."
+            value={newReport.title}
+            onChange={(e) => setNewReport({ ...newReport, title: e.target.value })}
+            required
+          />
+        </div>
 
-    {/* Preview da imagem */}
-    {newReport.image && (
-      <div className="flex justify-center">
-        <img
-          src={URL.createObjectURL(newReport.image)}
-          alt="Preview"
-          className="max-h-48 rounded-lg border"
-        />
-      </div>
-    )}
+        {/* Tipo */}
+        <Select
+          value={newReport.type}
+          onValueChange={(value: string) => setNewReport({ ...newReport, type: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="lixo-irregular">Descarte Irregular</SelectItem>
+            <SelectItem value="ponto-danificado">Ponto de Coleta Danificado</SelectItem>
+            <SelectItem value="entulho">Entulho</SelectItem>
+            <SelectItem value="esgoto">Esgoto a Céu Aberto</SelectItem>
+            <SelectItem value="outros">Outros</SelectItem>
+          </SelectContent>
+        </Select>
 
-    {/* Botão enviar */}
-    <Button
-      type="submit"
-      className="w-full bg-[rgba(20,61,96,1)] hover:bg-[#D54E00] text-white"
-    >
-      <Send className="w-4 h-4 mr-2" />
-      Enviar Denúncia
-    </Button>
-  </form>
-</CardContent>
+        {/* Localização */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Localização</label>
+          <LocationInput
+            value={newReport.location}
+            onChange={(val) => setNewReport({ ...newReport, location: val })}
+          />
+        </div>
+
+        {/* Descrição */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Descrição</label>
+          <Textarea
+            placeholder="Descreva detalhadamente o problema encontrado..."
+            value={newReport.description}
+            onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
+            rows={4}
+            required
+          />
+        </div>
+
+        {/* Foto */}
+        <div className="flex items-center gap-4 p-4 bg-[#DDEB9D] rounded-lg">
+          <Camera className="w-8 h-8 text-[#143D60]" />
+          <div>
+            <p className="font-medium text-[#143D60]">Adicionar Foto</p>
+            <p className="text-sm text-gray-600">Adicione evidências fotográficas (opcional)</p>
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            id="foto-denuncia"
+            onChange={(e) =>
+              setNewReport({ ...newReport, image: e.target.files ? e.target.files[0] : null })
+            }
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="ml-auto"
+            onClick={() => document.getElementById("foto-denuncia")?.click()}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Foto
+          </Button>
+        </div>
+
+        {/* Preview da imagem */}
+        {newReport.image && (
+          <div className="flex justify-center">
+            <img
+              src={URL.createObjectURL(newReport.image)}
+              alt="Preview"
+              className="max-h-48 rounded-lg border"
+            />
+          </div>
+        )}
+
+        {/* Botão enviar */}
+        <Button
+          type="submit"
+          className="w-full bg-[rgba(20,61,96,1)] hover:bg-[#D54E00] text-white"
+        >
+          <Send className="w-4 h-4 mr-2" />
+          Enviar Denúncia
+        </Button>
+      </form>
+    </CardContent>
   </Card>
 </TabsContent>
+
+{/* Registrar Ponto de coleta */}
+<TabsContent value="register" className="space-y-6">
+  <Card>
+    <CardHeader>
+      <CardTitle className="text-[#143D60]">Registrar Novo ponto de coleta</CardTitle>
+      <CardDescription>Compartilhe locais seguros de descarte conosco!</CardDescription>
+    </CardHeader>
+
+    <CardContent>
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          const formData = new FormData();
+          formData.append("id_usuario", user.id);
+          formData.append("titulo", newRegister.title);
+          formData.append("descricao", newRegister.description);
+          formData.append("localizacao", newRegister.location);
+          if (newRegister.image) formData.append("foto", newRegister.image);
+
+          try {
+            const res = await fetch("http://localhost:3333/pontos", {
+              method: "POST",
+              body: formData,
+            });
+            if (!res.ok) throw new Error("Erro ao Registrar ponto de coleta");
+            alert("✅ Ponto de coleta registrado com sucesso!");
+            setNewRegister({ title: "", description: "", location: "", type: "", image: null });
+          } catch (err) {
+            alert("❌ Falha ao registrar ponto de coleta.");
+            console.error(err);
+          }
+        }}
+        className="space-y-4"
+        encType="multipart/form-data"
+      >
+        {/* Título */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Nome do Local</label>
+          <Input
+            placeholder="Ex: Ecoestação Imbiribeira"
+            value={newRegister.title}
+            onChange={(e) => setNewRegister({ ...newRegister, title: e.target.value })}
+            required
+          />
+        </div>
+
+        {/* Tipo */}
+        <Select
+          value={newRegister.type}
+          onValueChange={(value: string) => setNewRegister({ ...newRegister, type: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione o tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="reciclavel">Reciclavel</SelectItem>
+            <SelectItem value="organico">Orgânico</SelectItem>
+            <SelectItem value="eletronico">Eletronico</SelectItem>
+            <SelectItem value="outros">Outros</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Localização */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Localização</label>
+          <LocationInput
+            value={newRegister.location}
+            onChange={(val) => setNewRegister({ ...newRegister, location: val })}
+          />
+        </div>
+
+        {/* Descrição */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Descrição</label>
+          <Textarea
+            placeholder="Descreva o local de coleta..."
+            value={newRegister.description}
+            onChange={(e) => setNewRegister({ ...newRegister, description: e.target.value })}
+            rows={4}
+            required
+          />
+        </div>
+
+        {/* Foto */}
+        <div className="flex items-center gap-4 p-4 bg-[#DDEB9D] rounded-lg">
+          <Camera className="w-8 h-8 text-[#143D60]" />
+          <div>
+            <p className="font-medium text-[#143D60]">Adicionar Foto</p>
+            <p className="text-sm text-gray-600">Adicione evidências fotográficas (opcional)</p>
+          </div>
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            id="foto-ponto"
+            onChange={(e) =>
+              setNewRegister({ ...newRegister, image: e.target.files ? e.target.files[0] : null })
+            }
+          />
+          <Button
+            type="button"
+            variant="outline"
+            className="ml-auto"
+            onClick={() => document.getElementById("foto-ponto")?.click()}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Foto
+          </Button>
+        </div>
+
+        {/* Preview da imagem */}
+        {newRegister.image && (
+          <div className="flex justify-center">
+            <img
+              src={URL.createObjectURL(newRegister.image)}
+              alt="Preview"
+              className="max-h-48 rounded-lg border"
+            />
+          </div>
+        )}
+
+        {/* Botão enviar */}
+        <Button
+          type="submit"
+          className="w-full bg-[rgba(20,61,96,1)] hover:bg-[#D54E00] text-white"
+        >
+          <Send className="w-4 h-4 mr-2" />
+          Enviar Registro
+        </Button>
+      </form>
+    </CardContent>
+  </Card>
+</TabsContent>
+
 
           {/* Minhas Denúncias */}
           <TabsContent value="my-reports" className="space-y-6">

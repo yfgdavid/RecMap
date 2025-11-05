@@ -8,8 +8,8 @@ import api from "../services/api";
 // Limites e centro do Recife
 const recifeCenter: [number, number] = [-8.0476, -34.877];
 const recifeBounds: [[number, number], [number, number]] = [
-  [-8.12, -34.94],
-  [-7.95, -34.80],
+  [-8.164, -34.976], // sudoeste: extremo inferior esquerdo
+  [-7.903, -34.841], // nordeste: extremo superior direito
 ];
 
 // Tipos de dados
@@ -20,6 +20,7 @@ interface Denuncia {
   latitude: number;
   longitude: number;
   status: string;
+  foto?: string; // adicionado
 }
 
 interface PontoColeta {
@@ -29,6 +30,7 @@ interface PontoColeta {
   tipo_residuo: string;
   latitude: number;
   longitude: number;
+  foto?: string; // adicionado
 }
 
 interface MapaData {
@@ -72,18 +74,20 @@ const MapComponent = () => {
         const res = await api.get("/mapa");
         const data = res.data;
 
-        // Mapear denúncias e deslocar levemente se estiverem na mesma posição
+        // Mapear denúncias
         const denuncias: Denuncia[] = data
           .filter((item: any) => item.tipo === "denuncia")
           .map((d: any, i: number) => ({
             id: d.id,
             titulo: d.titulo,
             descricao: d.descricao,
-            latitude: d.latitude + i * 0.00005, // pequeno deslocamento
+            latitude: d.latitude + i * 0.00005,
             longitude: d.longitude + i * 0.00005,
             status: d.status || "PENDENTE",
+            foto: d.foto || undefined,
           }));
 
+        // Mapear pontos de coleta
         const pontos: PontoColeta[] = data
           .filter((item: any) => item.tipo === "ponto")
           .map((p: any) => ({
@@ -93,6 +97,7 @@ const MapComponent = () => {
             tipo_residuo: p.tipo_residuo || "",
             latitude: p.latitude,
             longitude: p.longitude,
+            foto: p.foto || undefined,
           }));
 
         setDadosMapa({ denuncias, pontos });
@@ -139,9 +144,19 @@ const MapComponent = () => {
           )}
         >
           <Popup>
-            <strong>{denuncia.titulo}</strong>
-            <br />
-            {denuncia.descricao}
+            <div className="space-y-2">
+              <strong>{denuncia.titulo}</strong>
+              <p className="text-sm text-gray-600">{denuncia.descricao}</p>
+              {denuncia.foto && (
+                <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
+                  <img
+                    src={denuncia.foto}
+                    alt={denuncia.titulo}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+            </div>
           </Popup>
         </Marker>
       ))}
@@ -154,9 +169,19 @@ const MapComponent = () => {
           icon={createColoredIcon("#069240")}
         >
           <Popup>
-            <strong>{ponto.titulo}</strong>
-            <br />
-            {ponto.tipo_residuo}
+            <div className="space-y-2">
+              <strong>{ponto.titulo}</strong>
+              <p className="text-sm text-gray-600">{ponto.tipo_residuo}</p>
+              {ponto.foto && (
+                <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
+                  <img
+                    src={ponto.foto}
+                    alt={ponto.titulo}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+            </div>
           </Popup>
         </Marker>
       ))}
