@@ -3,19 +3,19 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Badge } from '../ui/badge';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from '../ui/dropdown-menu';
 import { RecMapLogo } from '../RecMapLogo';
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
-import { 
-  FileText, MapPin, Users, TrendingUp, Download, 
+import {
+  FileText, MapPin, Users, TrendingUp, Download,
   AlertTriangle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send
 } from 'lucide-react';
 import { User } from '../../App';
@@ -108,7 +108,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 <p className="text-[#A0C878]">Bem-vindo, {user.name}</p>
               </div>
             </div>
-            <Button 
+            <Button
               onClick={onLogout}
               className="bg-[#143D60] text-white hover:bg-[#0F2F4A] border-[#143D60]"
             >
@@ -240,7 +240,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                         <Tooltip />
                       </PieChart>
                     </ResponsiveContainer>
-                    
+
                     {/* Versão Mobile - Gráfico Menor */}
                     <ResponsiveContainer width="100%" height={240} className="md:hidden">
                       <PieChart>
@@ -258,13 +258,13 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                         <Tooltip />
                       </PieChart>
                     </ResponsiveContainer>
-                    
+
                     {/* Legenda Customizada Responsiva */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
                       {wasteTypesData.map((item, index) => (
                         <div key={index} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                          <div 
-                            className="w-4 h-4 rounded-full flex-shrink-0 border-2 border-white shadow-sm" 
+                          <div
+                            className="w-4 h-4 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
                             style={{ backgroundColor: item.color }}
                           ></div>
                           <div className="flex flex-col min-w-0">
@@ -292,7 +292,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   {reports.map((report) => {
                     const StatusIcon = getStatusIcon(report.status);
                     const canTakeAction = report.status !== 'resolvida';
-                    
+
                     return (
                       <div key={report.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 gap-3">
                         <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -362,7 +362,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-sm text-gray-600">{region.denuncias} denúncias</span>
-                        <Badge 
+                        <Badge
                           variant={region.status === 'Alto' ? 'destructive' : region.status === 'Médio' ? 'secondary' : 'default'}
                         >
                           {region.status}
@@ -389,17 +389,17 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                     <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip />
-                    <Line 
-                      type="monotone" 
-                      dataKey="resolvidas" 
-                      stroke="#A0C878" 
+                    <Line
+                      type="monotone"
+                      dataKey="resolvidas"
+                      stroke="#A0C878"
                       strokeWidth={3}
                       name="Denúncias Resolvidas"
                     />
-                    <Line 
-                      type="monotone" 
-                      dataKey="denuncias" 
-                      stroke="#143D60" 
+                    <Line
+                      type="monotone"
+                      dataKey="denuncias"
+                      stroke="#143D60"
                       strokeWidth={3}
                       name="Total de Denúncias"
                     />
@@ -409,7 +409,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             </Card>
           </TabsContent>
 
-          {/* Relatórios */}
           <TabsContent value="exports" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
@@ -418,10 +417,18 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   <CardDescription>Exportar dados de denúncias por período</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-white">
-                    <Download className="w-4 h-4 mr-2" />
-                    Baixar Relatório Mensal
+                  <Button className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-white flex items-center justify-center">
+                    <a
+                      href="http://localhost:3333/relatorios/infografico"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center w-full"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Baixar Relatório Mensal
+                    </a>
                   </Button>
+
                   <Button variant="outline" className="w-full border-[#A0C878] text-[#143D60]">
                     <FileText className="w-4 h-4 mr-2" />
                     Relatório Customizado

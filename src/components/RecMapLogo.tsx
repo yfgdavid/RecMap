@@ -10,7 +10,7 @@ interface RecMapLogoProps {
 
 export function RecMapLogo({ size = 'md', className = '', variant = 'auto' }: RecMapLogoProps) {
   const sizeClasses = {
-    sm: 'w-12 h-12',
+    sm: 'w-15 h-12',
     md: 'w-16 h-16',
     lg: 'w-20 h-20',
     xl: 'w-32 h-32',

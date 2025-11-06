@@ -12,9 +12,9 @@ import { RecMapLogo } from '../RecMapLogo';
 import { useEffect } from 'react';
 import { LocationInput } from '../LocationInput';
 
-import { 
+import {
   MapPin, Camera, Send, History, Award, TrendingUp,
-  BookOpen, Recycle, AlertTriangle, CheckCircle, 
+  BookOpen, Recycle, AlertTriangle, CheckCircle,
   Clock, Star, Leaf, LogOut, Filter, Plus,
   Link
 } from 'lucide-react';
@@ -66,122 +66,122 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [activeTab, setActiveTab] = useState('map');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [newReport, setNewReport] = useState({
-  title: '',
-  description: '',
-  location: '',
-  type: '',
-  image: null as File | null,
-});
+    title: '',
+    description: '',
+    location: '',
+    type: '',
+    image: null as File | null,
+  });
 
-const [newRegister, setNewRegister] = useState({
-  title: '',
-  description: '',
-  location: '',
-  type: '',
-  image: null as File | null,
-  
-});
+  const [newRegister, setNewRegister] = useState({
+    title: '',
+    description: '',
+    location: '',
+    type: '',
+    image: null as File | null,
+
+  });
 
   // Dados mockados
-  
 
-const [collectionPoints, setCollectionPoints] = useState<CollectionPoint[]>([]);
 
-useEffect(() => {
-  const fetchMapData = async () => {
-    try {
-      const res = await fetch('http://localhost:3333/mapa');
-      if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
-      const data = await res.json();
+  const [collectionPoints, setCollectionPoints] = useState<CollectionPoint[]>([]);
 
-      // Transforma pontos e denúncias no mesmo formato
-      const allItems: CollectionPoint[] = data.map((item: any) => {
-        if (item.tipo === 'ponto') {
-          return {
-            id: `${item.tipo}-${item.id}`,
-            name: item.titulo,
-            type: 'ponto',
-            address: item.descricao,
-            status: 'active'
-          };
-        } else if (item.tipo === 'denuncia') {
-          return {
-            id: `${item.tipo}-${item.id}`,
-            name: item.titulo,
-            type: 'denuncia',
-            address: item.descricao,
-            status: item.status.toLowerCase()
-          };
-        }
-        return null;
-      }).filter(Boolean) as CollectionPoint[];
+  useEffect(() => {
+    const fetchMapData = async () => {
+      try {
+        const res = await fetch('http://localhost:3333/mapa');
+        if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
+        const data = await res.json();
 
-      // Mantém apenas os 5 mais recentes
-      const latestFive = allItems.slice(-5).reverse();
-      setCollectionPoints(latestFive);
+        // Transforma pontos e denúncias no mesmo formato
+        const allItems: CollectionPoint[] = data.map((item: any) => {
+          if (item.tipo === 'ponto') {
+            return {
+              id: `${item.tipo}-${item.id}`,
+              name: item.titulo,
+              type: 'ponto',
+              address: item.descricao,
+              status: 'active'
+            };
+          } else if (item.tipo === 'denuncia') {
+            return {
+              id: `${item.tipo}-${item.id}`,
+              name: item.titulo,
+              type: 'denuncia',
+              address: item.descricao,
+              status: item.status.toLowerCase()
+            };
+          }
+          return null;
+        }).filter(Boolean) as CollectionPoint[];
 
-    } catch (error) {
-      console.error('Erro ao buscar dados do mapa:', error);
-    }
-  };
+        // Mantém apenas os 5 mais recentes
+        const latestFive = allItems.slice(-5).reverse();
+        setCollectionPoints(latestFive);
 
-  fetchMapData();
-  const interval = setInterval(fetchMapData, 10000);
-  return () => clearInterval(interval);
-}, []);
+      } catch (error) {
+        console.error('Erro ao buscar dados do mapa:', error);
+      }
+    };
+
+    fetchMapData();
+    const interval = setInterval(fetchMapData, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
 
 
   const [userReports, setUserReports] = useState<Report[]>([]);
 
 
-const carregarDenuncias = async () => {
-  try {
-    const res = await fetch(`http://localhost:3333/denuncias/usuario/${user.id}`);
-    if (!res.ok) throw new Error("Erro ao buscar denúncias");
-    const data = await res.json();
-    setUserReports(data);
-  } catch (err) {
-    console.error("Erro ao carregar denúncias:", err);
-  }
-};
+  const carregarDenuncias = async () => {
+    try {
+      const res = await fetch(`http://localhost:3333/denuncias/usuario/${user.id}`);
+      if (!res.ok) throw new Error("Erro ao buscar denúncias");
+      const data = await res.json();
+      setUserReports(data);
+    } catch (err) {
+      console.error("Erro ao carregar denúncias:", err);
+    }
+  };
 
 
-useEffect(() => {
-  if (user?.id) carregarDenuncias();
-}, [user?.id]);
-
-
-
+  useEffect(() => {
+    if (user?.id) carregarDenuncias();
+  }, [user?.id]);
 
 
 
- const [pendingValidations, setPendingValidations] = useState<Report[]>([]);
 
- const carregarDenunciasPendentes = async () => {
-  try {
-    const res = await fetch(`http://localhost:3333/denuncias/pendentes/${user.id}`);
-    if (!res.ok) throw new Error("Erro ao buscar denúncias pendentes");
-    const data = await res.json();
-    setPendingValidations(data);
-  } catch (err) {
-    console.error("Erro ao carregar denúncias pendentes:", err);
-  }
-};
 
-useEffect(() => {
-  if (user?.id) carregarDenunciasPendentes();
-}, [user?.id]);
+
+  const [pendingValidations, setPendingValidations] = useState<Report[]>([]);
+
+  const carregarDenunciasPendentes = async () => {
+    try {
+      const res = await fetch(`http://localhost:3333/denuncias/pendentes/${user.id}`);
+      if (!res.ok) throw new Error("Erro ao buscar denúncias pendentes");
+      const data = await res.json();
+      setPendingValidations(data);
+    } catch (err) {
+      console.error("Erro ao carregar denúncias pendentes:", err);
+    }
+  };
+
+  useEffect(() => {
+    if (user?.id) carregarDenunciasPendentes();
+  }, [user?.id]);
 
 
 
   const [educationalContent, setEducationalContent] = useState([
-  { title: 'Como separar resíduos corretamente', type: 'Vídeo', duration: '2 min', completed: false, url:'https://www.youtube.com/watch?v=o1HzpLHYEmE' },
-  { title: 'Reciclagem de plásticos', type: 'Artigo', duration: '8 min', completed: false, url: 'https://www.plastico.com.br/reciclagem-do-plastico/' },
-  { title: 'Quiz da Reciclagem', type: 'Quiz', duration: '3 min', completed: false, url:'https://crvr.com.br/jogos/quiz-da-reciclagem/' },
-  { title: 'Compostagem doméstica', type: 'Vídeo', duration: '17 min', completed: false, url: 'https://www.youtube.com/watch?v=7RV6JfxFvjY' },
-  { title: 'O destino do lixo e os desafios do descarte', type: 'Reportagem', duration: '6 min', completed: false, url:  'https://youtu.be/3h2tsLQ_QSg?si=tpkTazORBrwh244A'}
-]);
+    { title: 'Como separar resíduos corretamente', type: 'Vídeo', duration: '2 min', completed: false, url: 'https://www.youtube.com/watch?v=o1HzpLHYEmE' },
+    { title: 'Reciclagem de plásticos', type: 'Artigo', duration: '8 min', completed: false, url: 'https://www.plastico.com.br/reciclagem-do-plastico/' },
+    { title: 'Quiz da Reciclagem', type: 'Quiz', duration: '3 min', completed: false, url: 'https://crvr.com.br/jogos/quiz-da-reciclagem/' },
+    { title: 'Compostagem doméstica', type: 'Vídeo', duration: '17 min', completed: false, url: 'https://www.youtube.com/watch?v=7RV6JfxFvjY' },
+    { title: 'O destino do lixo e os desafios do descarte', type: 'Reportagem', duration: '6 min', completed: false, url: 'https://youtu.be/3h2tsLQ_QSg?si=tpkTazORBrwh244A' }
+  ]);
 
 
 
@@ -199,6 +199,8 @@ useEffect(() => {
   };
 
   const getTypeIcon = (type: string) => {
+     if (type === 'ponto') return '♻️'; // Todo ponto de coleta recebe ♻️
+     
     switch (type) {
       case 'reciclable': return '♻️';
       case 'organic': return '🌱';
@@ -209,46 +211,46 @@ useEffect(() => {
   };
 
 
- const handleValidateReport = async (reportId: number, vote: 'confirm' | 'reject') => {
-  try {
-    
-    const res = await fetch('http://localhost:3333/validacoes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id_usuario: user.id,
-        id_denuncia: reportId,
-        tipo_validacao: vote === 'confirm' ? 'CONFIRMAR' : 'CONTESTAR',
-      }),
-    });
+  const handleValidateReport = async (reportId: number, vote: 'confirm' | 'reject') => {
+    try {
 
-    if (!res.ok) throw new Error('Erro ao validar denúncia');
+      const res = await fetch('http://localhost:3333/validacoes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_usuario: user.id,
+          id_denuncia: reportId,
+          tipo_validacao: vote === 'confirm' ? 'CONFIRMAR' : 'CONTESTAR',
+        }),
+      });
 
-    const novaValidacao = await res.json();
+      if (!res.ok) throw new Error('Erro ao validar denúncia');
 
-    alert(`✅ Denúncia ${vote === 'confirm' ? 'confirmada' : 'contestada'}!`);
+      const novaValidacao = await res.json();
 
-    setPendingValidations(prev => prev.filter(report => report.id_denuncia !== reportId));
+      alert(`✅ Denúncia ${vote === 'confirm' ? 'confirmada' : 'contestada'}!`);
 
-    setUserReports(prev =>
-      prev.map(report => {
-        if (report.id_denuncia === reportId) {
-          return {
-            ...report,
-            validacoes: [...report.validacoes, novaValidacao], // adiciona a validação
-          };
-        }
-        return report;
-      })
-    );
-  } catch (err) {
-    console.error('Erro ao validar denúncia:', err);
-    alert('❌ Falha ao validar denúncia.');
-  }
-};
+      setPendingValidations(prev => prev.filter(report => report.id_denuncia !== reportId));
+
+      setUserReports(prev =>
+        prev.map(report => {
+          if (report.id_denuncia === reportId) {
+            return {
+              ...report,
+              validacoes: [...report.validacoes, novaValidacao], // adiciona a validação
+            };
+          }
+          return report;
+        })
+      );
+    } catch (err) {
+      console.error('Erro ao validar denúncia:', err);
+      alert('❌ Falha ao validar denúncia.');
+    }
+  };
 
 
-  const filteredPoints = collectionPoints.filter(point => 
+  const filteredPoints = collectionPoints.filter(point =>
     selectedFilter === 'all' || point.type === selectedFilter
   );
 
@@ -256,90 +258,87 @@ useEffect(() => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-[#143D60] text-white shadow-lg">
-        <div className="container mx-auto px-3 sm:px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between gap-2 sm:gap-4">
-            {/* Logo e Saudação - Layout Compacto */}
-            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-              <div className="w-10 h-10 sm:w-16 sm:h-16 flex-shrink-0">
-                <RecMapLogo size="md" variant="dark" />
-              </div>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 min-w-0">
-                <span className="text-[#DDEB9D] text-xs sm:text-base truncate">
-                  Olá, {user.name.split(' ')[0]}!
-                </span>
-                <div className="flex items-center gap-1 text-[#A0C878]">
-                </div>
-              </div>
+        <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
+          {/* Logo e Saudação */}
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+            <div className="flex-shrink-0 flex items-center justify-center">
+              <RecMapLogo size="xl" variant="dark" />
             </div>
-            
-            {/* Botão Sair - Compacto */}
-            <Button 
-              onClick={onLogout}
-              variant="outline"
-              size="sm"
-              className="flex-shrink-0 bg-transparent border-[#A0C878] text-[#DDEB9D] hover:bg-[#A0C878] hover:text-white transition-colors px-2 sm:px-4 h-8 sm:h-9"
-            >
-              <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Sair</span>
-            </Button>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 min-w-0">
+              <span className="text-[#DDEB9D] text-xs sm:text-base truncate">
+                Olá, {user.name.split(' ')[0]}!
+              </span>
+              <div className="flex items-center gap-1 text-[#A0C878]"></div>
+            </div>
           </div>
+
+          {/* Botão Sair */}
+          <Button
+            onClick={onLogout}
+            variant="outline"
+            size="sm"
+            className="flex-shrink-0 bg-transparent border-[#A0C878] text-[#DDEB9D] hover:bg-[#A0C878] hover:text-white transition-colors px-2 sm:px-4 h-8 sm:h-9"
+          >
+            <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Sair</span>
+          </Button>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Navegação Responsiva */}
-         <div className="bg-white shadow-sm rounded-lg p-2 overflow-hidden">
-  <TabsList className="inline-flex flex-wrap justify-center w-full gap-2 bg-transparent">
-    <TabsTrigger 
-      value="map" 
-      className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
-    >
-      <MapPin className="w-4 h-4" />
-      <span>Mapa</span>
-    </TabsTrigger>
+          <div className="bg-white shadow-sm rounded-lg p-2 overflow-hidden">
+            <TabsList className="inline-flex flex-wrap justify-center w-full gap-2 bg-transparent">
+              <TabsTrigger
+                value="map"
+                className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+              >
+                <MapPin className="w-4 h-4" />
+                <span>Mapa</span>
+              </TabsTrigger>
 
-    <TabsTrigger 
-      value="report" 
-      className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
-    >
-      <Camera className="w-4 h-4" />
-      <span>Denunciar</span>
-    </TabsTrigger>
+              <TabsTrigger
+                value="report"
+                className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+              >
+                <Camera className="w-4 h-4" />
+                <span>Denunciar</span>
+              </TabsTrigger>
 
-    <TabsTrigger 
-      value="register" 
-      className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
-    >
-      <Camera className="w-4 h-4" />
-      <span>Registrar</span>
-    </TabsTrigger>
+              <TabsTrigger
+                value="register"
+                className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+              >
+                <Camera className="w-4 h-4" />
+                <span>Registrar</span>
+              </TabsTrigger>
 
-    <TabsTrigger 
-      value="my-reports" 
-      className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
-    >
-      <History className="w-4 h-4" />
-      <span>Minhas Denúncias</span>
-    </TabsTrigger>
+              <TabsTrigger
+                value="my-reports"
+                className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+              >
+                <History className="w-4 h-4" />
+                <span>Minhas Denúncias</span>
+              </TabsTrigger>
 
-    <TabsTrigger 
-      value="validate" 
-      className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
-    >
-      <CheckCircle className="w-4 h-4" />
-      <span>Validar</span>
-    </TabsTrigger>
+              <TabsTrigger
+                value="validate"
+                className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+              >
+                <CheckCircle className="w-4 h-4" />
+                <span>Validar</span>
+              </TabsTrigger>
 
-    <TabsTrigger 
-      value="education" 
-      className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
-    >
-      <BookOpen className="w-4 h-4" />
-      <span>Aprender</span>
-    </TabsTrigger>
-  </TabsList>
-</div>
+              <TabsTrigger
+                value="education"
+                className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>Aprender</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
           {/* Mapa */}
           <TabsContent value="map" className="space-y-6">
             <Card>
@@ -371,27 +370,27 @@ useEffect(() => {
                 <div className="mb-6 rounded-lg overflow-hidden border-2 border-[#A0C878] shadow-lg">
                   <div className="relative w-full">
                     {/* Aspect ratio container para manter proporções */}
-             
-                      <MapComponent />
-                      {/* Overlay com legenda permanece igual */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#143D60]/90 to-transparent p-4">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 text-white">
-                          <p className="text-sm font-medium">Legenda:</p>
-                          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-lg"></div>
-                              <span className="text-xs sm:text-sm">Denúncias</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
-                              <span className="text-xs sm:text-sm">Pontos de coleta</span>
-                            </div>
+
+                    <MapComponent />
+                    {/* Overlay com legenda permanece igual */}
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#143D60]/90 to-transparent p-4">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 text-white">
+                        <p className="text-sm font-medium">Legenda:</p>
+                        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-lg"></div>
+                            <span className="text-xs sm:text-sm">Denúncias</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
+                            <span className="text-xs sm:text-sm">Pontos de coleta</span>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                
+                </div>
+
 
                 <div className="space-y-4">
                   {filteredPoints.map((point) => (
@@ -413,275 +412,275 @@ useEffect(() => {
               </CardContent>
             </Card>
           </TabsContent>
-{/* Registrar Denúncia */}
-<TabsContent value="report" className="space-y-6">
-  <Card>
-    <CardHeader>
-      <CardTitle className="text-[#143D60]">Registrar Nova Denúncia</CardTitle>
-      <CardDescription>Relate problemas ambientais em sua região</CardDescription>
-    </CardHeader>
+          {/* Registrar Denúncia */}
+          <TabsContent value="report" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-[#143D60]">Registrar Nova Denúncia</CardTitle>
+                <CardDescription>Relate problemas ambientais em sua região</CardDescription>
+              </CardHeader>
 
-    <CardContent>
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const formData = new FormData();
-          formData.append("id_usuario", user.id);
-          formData.append("titulo", newReport.title);
-          formData.append("descricao", newReport.description);
-          formData.append("localizacao", newReport.location);
-          if (newReport.image) formData.append("foto", newReport.image);
+              <CardContent>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData();
+                    formData.append("id_usuario", user.id);
+                    formData.append("titulo", newReport.title);
+                    formData.append("descricao", newReport.description);
+                    formData.append("localizacao", newReport.location);
+                    if (newReport.image) formData.append("foto", newReport.image);
 
-          try {
-            const res = await fetch("http://localhost:3333/denuncias", {
-              method: "POST",
-              body: formData,
-            });
-            if (!res.ok) throw new Error("Erro ao enviar denúncia");
-            alert("✅ Denúncia enviada com sucesso!");
-            setNewReport({ title: "", description: "", location: "", type: "", image: null });
-            await carregarDenuncias();
-          } catch (err) {
-            alert("❌ Falha ao enviar denúncia.");
-            console.error(err);
-          }
-        }}
-        className="space-y-4"
-        encType="multipart/form-data"
-      >
-        {/* Título */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Título da Denúncia</label>
-          <Input
-            placeholder="Ex: Lixo acumulado na rua..."
-            value={newReport.title}
-            onChange={(e) => setNewReport({ ...newReport, title: e.target.value })}
-            required
-          />
-        </div>
+                    try {
+                      const res = await fetch("http://localhost:3333/denuncias", {
+                        method: "POST",
+                        body: formData,
+                      });
+                      if (!res.ok) throw new Error("Erro ao enviar denúncia");
+                      alert("✅ Denúncia enviada com sucesso!");
+                      setNewReport({ title: "", description: "", location: "", type: "", image: null });
+                      await carregarDenuncias();
+                    } catch (err) {
+                      alert("❌ Falha ao enviar denúncia.");
+                      console.error(err);
+                    }
+                  }}
+                  className="space-y-4"
+                  encType="multipart/form-data"
+                >
+                  {/* Título */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Título da Denúncia</label>
+                    <Input
+                      placeholder="Ex: Lixo acumulado na rua..."
+                      value={newReport.title}
+                      onChange={(e) => setNewReport({ ...newReport, title: e.target.value })}
+                      required
+                    />
+                  </div>
 
-        {/* Tipo */}
-        <Select
-          value={newReport.type}
-          onValueChange={(value: string) => setNewReport({ ...newReport, type: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="lixo-irregular">Descarte Irregular</SelectItem>
-            <SelectItem value="ponto-danificado">Ponto de Coleta Danificado</SelectItem>
-            <SelectItem value="entulho">Entulho</SelectItem>
-            <SelectItem value="esgoto">Esgoto a Céu Aberto</SelectItem>
-            <SelectItem value="outros">Outros</SelectItem>
-          </SelectContent>
-        </Select>
+                  {/* Tipo */}
+                  <Select
+                    value={newReport.type}
+                    onValueChange={(value: string) => setNewReport({ ...newReport, type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lixo-irregular">Descarte Irregular</SelectItem>
+                      <SelectItem value="ponto-danificado">Ponto de Coleta Danificado</SelectItem>
+                      <SelectItem value="entulho">Entulho</SelectItem>
+                      <SelectItem value="esgoto">Esgoto a Céu Aberto</SelectItem>
+                      <SelectItem value="outros">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-        {/* Localização */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Localização</label>
-          <LocationInput
-            value={newReport.location}
-            onChange={(val) => setNewReport({ ...newReport, location: val })}
-          />
-        </div>
+                  {/* Localização */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Localização</label>
+                    <LocationInput
+                      value={newReport.location}
+                      onChange={(val) => setNewReport({ ...newReport, location: val })}
+                    />
+                  </div>
 
-        {/* Descrição */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Descrição</label>
-          <Textarea
-            placeholder="Descreva detalhadamente o problema encontrado..."
-            value={newReport.description}
-            onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
-            rows={4}
-            required
-          />
-        </div>
+                  {/* Descrição */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Descrição</label>
+                    <Textarea
+                      placeholder="Descreva detalhadamente o problema encontrado..."
+                      value={newReport.description}
+                      onChange={(e) => setNewReport({ ...newReport, description: e.target.value })}
+                      rows={4}
+                      required
+                    />
+                  </div>
 
-        {/* Foto */}
-        <div className="flex items-center gap-4 p-4 bg-[#DDEB9D] rounded-lg">
-          <Camera className="w-8 h-8 text-[#143D60]" />
-          <div>
-            <p className="font-medium text-[#143D60]">Adicionar Foto</p>
-            <p className="text-sm text-gray-600">Adicione evidências fotográficas (opcional)</p>
-          </div>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            id="foto-denuncia"
-            onChange={(e) =>
-              setNewReport({ ...newReport, image: e.target.files ? e.target.files[0] : null })
-            }
-          />
-          <Button
-            type="button"
-            variant="outline"
-            className="ml-auto"
-            onClick={() => document.getElementById("foto-denuncia")?.click()}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Foto
-          </Button>
-        </div>
+                  {/* Foto */}
+                  <div className="flex items-center gap-4 p-4 bg-[#DDEB9D] rounded-lg">
+                    <Camera className="w-8 h-8 text-[#143D60]" />
+                    <div>
+                      <p className="font-medium text-[#143D60]">Adicionar Foto</p>
+                      <p className="text-sm text-gray-600">Adicione evidências fotográficas (opcional)</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      id="foto-denuncia"
+                      onChange={(e) =>
+                        setNewReport({ ...newReport, image: e.target.files ? e.target.files[0] : null })
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="ml-auto"
+                      onClick={() => document.getElementById("foto-denuncia")?.click()}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Foto
+                    </Button>
+                  </div>
 
-        {/* Preview da imagem */}
-        {newReport.image && (
-          <div className="flex justify-center">
-            <img
-              src={URL.createObjectURL(newReport.image)}
-              alt="Preview"
-              className="max-h-48 rounded-lg border"
-            />
-          </div>
-        )}
+                  {/* Preview da imagem */}
+                  {newReport.image && (
+                    <div className="flex justify-center">
+                      <img
+                        src={URL.createObjectURL(newReport.image)}
+                        alt="Preview"
+                        className="max-h-48 rounded-lg border"
+                      />
+                    </div>
+                  )}
 
-        {/* Botão enviar */}
-        <Button
-          type="submit"
-          className="w-full bg-[rgba(20,61,96,1)] hover:bg-[#D54E00] text-white"
-        >
-          <Send className="w-4 h-4 mr-2" />
-          Enviar Denúncia
-        </Button>
-      </form>
-    </CardContent>
-  </Card>
-</TabsContent>
+                  {/* Botão enviar */}
+                  <Button
+                    type="submit"
+                    className="w-full bg-[rgba(20,61,96,1)] hover:bg-[#D54E00] text-white"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Enviar Denúncia
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-{/* Registrar Ponto de coleta */}
-<TabsContent value="register" className="space-y-6">
-  <Card>
-    <CardHeader>
-      <CardTitle className="text-[#143D60]">Registrar Novo ponto de coleta</CardTitle>
-      <CardDescription>Compartilhe locais seguros de descarte conosco!</CardDescription>
-    </CardHeader>
+          {/* Registrar Ponto de coleta */}
+          <TabsContent value="register" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-[#143D60]">Registrar Novo ponto de coleta</CardTitle>
+                <CardDescription>Compartilhe locais seguros de descarte conosco!</CardDescription>
+              </CardHeader>
 
-    <CardContent>
-      <form
-        onSubmit={async (e) => {
-          e.preventDefault();
-          const formData = new FormData();
-          formData.append("id_usuario", user.id);
-          formData.append("titulo", newRegister.title);
-          formData.append("descricao", newRegister.description);
-          formData.append("localizacao", newRegister.location);
-          if (newRegister.image) formData.append("foto", newRegister.image);
+              <CardContent>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const formData = new FormData();
+                    formData.append("id_usuario", user.id);
+                    formData.append("titulo", newRegister.title);
+                    formData.append("descricao", newRegister.description);
+                    formData.append("localizacao", newRegister.location);
+                    if (newRegister.image) formData.append("foto", newRegister.image);
 
-          try {
-            const res = await fetch("http://localhost:3333/pontos", {
-              method: "POST",
-              body: formData,
-            });
-            if (!res.ok) throw new Error("Erro ao Registrar ponto de coleta");
-            alert("✅ Ponto de coleta registrado com sucesso!");
-            setNewRegister({ title: "", description: "", location: "", type: "", image: null });
-          } catch (err) {
-            alert("❌ Falha ao registrar ponto de coleta.");
-            console.error(err);
-          }
-        }}
-        className="space-y-4"
-        encType="multipart/form-data"
-      >
-        {/* Título */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Nome do Local</label>
-          <Input
-            placeholder="Ex: Ecoestação Imbiribeira"
-            value={newRegister.title}
-            onChange={(e) => setNewRegister({ ...newRegister, title: e.target.value })}
-            required
-          />
-        </div>
+                    try {
+                      const res = await fetch("http://localhost:3333/pontos", {
+                        method: "POST",
+                        body: formData,
+                      });
+                      if (!res.ok) throw new Error("Erro ao Registrar ponto de coleta");
+                      alert("✅ Ponto de coleta registrado com sucesso!");
+                      setNewRegister({ title: "", description: "", location: "", type: "", image: null });
+                    } catch (err) {
+                      alert("❌ Falha ao registrar ponto de coleta.");
+                      console.error(err);
+                    }
+                  }}
+                  className="space-y-4"
+                  encType="multipart/form-data"
+                >
+                  {/* Título */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Nome do Local</label>
+                    <Input
+                      placeholder="Ex: Ecoestação Imbiribeira"
+                      value={newRegister.title}
+                      onChange={(e) => setNewRegister({ ...newRegister, title: e.target.value })}
+                      required
+                    />
+                  </div>
 
-        {/* Tipo */}
-        <Select
-          value={newRegister.type}
-          onValueChange={(value: string) => setNewRegister({ ...newRegister, type: value })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Selecione o tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="reciclavel">Reciclavel</SelectItem>
-            <SelectItem value="organico">Orgânico</SelectItem>
-            <SelectItem value="eletronico">Eletronico</SelectItem>
-            <SelectItem value="outros">Outros</SelectItem>
-          </SelectContent>
-        </Select>
+                  {/* Tipo */}
+                  <Select
+                    value={newRegister.type}
+                    onValueChange={(value: string) => setNewRegister({ ...newRegister, type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="reciclavel">Reciclavel</SelectItem>
+                      <SelectItem value="organico">Orgânico</SelectItem>
+                      <SelectItem value="eletronico">Eletronico</SelectItem>
+                      <SelectItem value="outros">Outros</SelectItem>
+                    </SelectContent>
+                  </Select>
 
-        {/* Localização */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Localização</label>
-          <LocationInput
-            value={newRegister.location}
-            onChange={(val) => setNewRegister({ ...newRegister, location: val })}
-          />
-        </div>
+                  {/* Localização */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Localização</label>
+                    <LocationInput
+                      value={newRegister.location}
+                      onChange={(val) => setNewRegister({ ...newRegister, location: val })}
+                    />
+                  </div>
 
-        {/* Descrição */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Descrição</label>
-          <Textarea
-            placeholder="Descreva o local de coleta..."
-            value={newRegister.description}
-            onChange={(e) => setNewRegister({ ...newRegister, description: e.target.value })}
-            rows={4}
-            required
-          />
-        </div>
+                  {/* Descrição */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Descrição</label>
+                    <Textarea
+                      placeholder="Descreva o local de coleta..."
+                      value={newRegister.description}
+                      onChange={(e) => setNewRegister({ ...newRegister, description: e.target.value })}
+                      rows={4}
+                      required
+                    />
+                  </div>
 
-        {/* Foto */}
-        <div className="flex items-center gap-4 p-4 bg-[#DDEB9D] rounded-lg">
-          <Camera className="w-8 h-8 text-[#143D60]" />
-          <div>
-            <p className="font-medium text-[#143D60]">Adicionar Foto</p>
-            <p className="text-sm text-gray-600">Adicione evidências fotográficas (opcional)</p>
-          </div>
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            id="foto-ponto"
-            onChange={(e) =>
-              setNewRegister({ ...newRegister, image: e.target.files ? e.target.files[0] : null })
-            }
-          />
-          <Button
-            type="button"
-            variant="outline"
-            className="ml-auto"
-            onClick={() => document.getElementById("foto-ponto")?.click()}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Foto
-          </Button>
-        </div>
+                  {/* Foto */}
+                  <div className="flex items-center gap-4 p-4 bg-[#DDEB9D] rounded-lg">
+                    <Camera className="w-8 h-8 text-[#143D60]" />
+                    <div>
+                      <p className="font-medium text-[#143D60]">Adicionar Foto</p>
+                      <p className="text-sm text-gray-600">Adicione evidências fotográficas (opcional)</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      id="foto-ponto"
+                      onChange={(e) =>
+                        setNewRegister({ ...newRegister, image: e.target.files ? e.target.files[0] : null })
+                      }
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="ml-auto"
+                      onClick={() => document.getElementById("foto-ponto")?.click()}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Foto
+                    </Button>
+                  </div>
 
-        {/* Preview da imagem */}
-        {newRegister.image && (
-          <div className="flex justify-center">
-            <img
-              src={URL.createObjectURL(newRegister.image)}
-              alt="Preview"
-              className="max-h-48 rounded-lg border"
-            />
-          </div>
-        )}
+                  {/* Preview da imagem */}
+                  {newRegister.image && (
+                    <div className="flex justify-center">
+                      <img
+                        src={URL.createObjectURL(newRegister.image)}
+                        alt="Preview"
+                        className="max-h-48 rounded-lg border"
+                      />
+                    </div>
+                  )}
 
-        {/* Botão enviar */}
-        <Button
-          type="submit"
-          className="w-full bg-[rgba(20,61,96,1)] hover:bg-[#D54E00] text-white"
-        >
-          <Send className="w-4 h-4 mr-2" />
-          Enviar Registro
-        </Button>
-      </form>
-    </CardContent>
-  </Card>
-</TabsContent>
+                  {/* Botão enviar */}
+                  <Button
+                    type="submit"
+                    className="w-full bg-[rgba(20,61,96,1)] hover:bg-[#D54E00] text-white"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    Enviar Registro
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
 
           {/* Minhas Denúncias */}
@@ -693,42 +692,42 @@ useEffect(() => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                              {userReports.length === 0 ? (
-                  <p className="text-sm text-gray-500">
-                    Você ainda não fez nenhuma denúncia.
-                  </p>
-                ) : (
-                  userReports.map((report) => (
-                    <div
-                      key={report.id_denuncia}
-                      className="p-4 border rounded-lg hover:bg-gray-50"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h4 className="font-medium text-[#143D60]">{report.titulo}</h4>
-                        <Badge className={`${getStatusColor(report.status)} text-white`}>
-                          {report.status === "PENDENTE"
-                            ? "Pendente"
-                            : report.status === "VALIDADA"
-                            ? "Validada"
-                            : report.status === "ENCAMINHADA"
-                            ? "Encaminhada"
-                            : "Resolvida"}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">{report.descricao}</p>
-                      <div className="flex items-center justify-between text-xs text-gray-500">
-                        <span>
-                          {report.localizacao || "Localização não informada"} •{" "}
-                          {new Date(report.data_criacao).toLocaleDateString("pt-BR")}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3" />
-                          <span>{report.validacoes?.length || 0} validações</span>
+                  {userReports.length === 0 ? (
+                    <p className="text-sm text-gray-500">
+                      Você ainda não fez nenhuma denúncia.
+                    </p>
+                  ) : (
+                    userReports.map((report) => (
+                      <div
+                        key={report.id_denuncia}
+                        className="p-4 border rounded-lg hover:bg-gray-50"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-medium text-[#143D60]">{report.titulo}</h4>
+                          <Badge className={`${getStatusColor(report.status)} text-white`}>
+                            {report.status === "PENDENTE"
+                              ? "Pendente"
+                              : report.status === "VALIDADA"
+                                ? "Validada"
+                                : report.status === "ENCAMINHADA"
+                                  ? "Encaminhada"
+                                  : "Resolvida"}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-2">{report.descricao}</p>
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>
+                            {report.localizacao || "Localização não informada"} •{" "}
+                            {new Date(report.data_criacao).toLocaleDateString("pt-BR")}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <Star className="w-3 h-3" />
+                            <span>{report.validacoes?.length || 0} validações</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
-                )}
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -752,16 +751,16 @@ useEffect(() => {
                           {report.localizacao} • {report.data_criacao} • <span>{report.validacoes?.length ?? 0} validações</span>
                         </div>
                         <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => handleValidateReport(report.id_denuncia, 'reject')}
                             className="border-red-500 text-red-500 hover:bg-red-50"
                           >
                             Contestar
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             onClick={() => handleValidateReport(report.id_denuncia, 'confirm')}
                             className="bg-[#A0C878] hover:bg-[#8BB668] text-white"
                           >
@@ -780,74 +779,72 @@ useEffect(() => {
           <TabsContent value="education" className="space-y-6">
             {/* Timeline Histórica */}
             <HistoryTimeline />
-            
+
             {/* Conteúdos Educativos */}
-             <Card>
-    <CardHeader>
-      <CardTitle className="text-[#143D60]">Conteúdos Educativos</CardTitle>
-      <CardDescription>Aprenda sobre separação e descarte correto de resíduos</CardDescription>
-    </CardHeader>
-    <CardContent>
-      <div className="grid gap-4">
-        {educationalContent.map((content, index) => (
-          <div
-            key={index}
-            className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-          >
-            <div className="flex items-center gap-4">
-              <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  content.completed ? 'bg-[#A0C878]' : 'bg-gray-200'
-                }`}
-              >
-                {content.type === 'Quiz' ? '🧠' : content.type === 'Vídeo' ? '🎥' : '📖'}
-              </div>
-              <div>
-                <h4 className="font-medium text-[#143D60]">{content.title}</h4>
-                <p className="text-sm text-gray-600">
-                  {content.type} • {content.duration}
-                </p>
-              </div>
-            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-[#143D60]">Conteúdos Educativos</CardTitle>
+                <CardDescription>Aprenda sobre separação e descarte correto de resíduos</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {educationalContent.map((content, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div
+                          className={`w-10 h-10 rounded-lg flex items-center justify-center ${content.completed ? 'bg-[#A0C878]' : 'bg-gray-200'
+                            }`}
+                        >
+                          {content.type === 'Quiz' ? '🧠' : content.type === 'Vídeo' ? '🎥' : '📖'}
+                        </div>
+                        <div>
+                          <h4 className="font-medium text-[#143D60]">{content.title}</h4>
+                          <p className="text-sm text-gray-600">
+                            {content.type} • {content.duration}
+                          </p>
+                        </div>
+                      </div>
 
-           <Button
-            className={`text-white ${
-              content.completed ? 'bg-gray-300' : 'bg-[#A0C878] hover:bg-[#8BB668]'
-            }`}
-            onClick={() => {
-              // Marca como concluído
-              setEducationalContent(prev => {
-                const newContent = [...prev];
-                newContent[index].completed = true;
-                return newContent;
-              });
+                      <Button
+                        className={`text-white ${content.completed ? 'bg-gray-300' : 'bg-[#A0C878] hover:bg-[#8BB668]'
+                          }`}
+                        onClick={() => {
+                          // Marca como concluído
+                          setEducationalContent(prev => {
+                            const newContent = [...prev];
+                            newContent[index].completed = true;
+                            return newContent;
+                          });
 
-              // Abre o link em nova aba
-              window.open(content.url, '_blank');
-            }}
-          >
-            {content.completed ? 'Concluído' : 'Iniciar'}
-          </Button>
-          </div>
-        ))}
-      </div>
+                          // Abre o link em nova aba
+                          window.open(content.url, '_blank');
+                        }}
+                      >
+                        {content.completed ? 'Concluído' : 'Iniciar'}
+                      </Button>
+                    </div>
+                  ))}
+                </div>
 
-      {/* Barra de progresso */}
-      <div className="mt-6 p-4 bg-[#DDEB9D] rounded-lg">
-        <div className="flex items-center justify-between mb-2">
-          <h4 className="font-medium text-[#143D60]">Progresso de Aprendizado</h4>
-          <span className="text-sm text-[#143D60]">
-            {Math.round((educationalContent.filter(c => c.completed).length / educationalContent.length) * 100)}%
-          </span>
-        </div>
-        <Progress value={(educationalContent.filter(c => c.completed).length / educationalContent.length) * 100} className="mb-2" />
-        <p className="text-sm text-gray-600">
-          {educationalContent.filter(c => c.completed).length} de {educationalContent.length} conteúdos concluídos
-        </p>
-      </div>
-    </CardContent>
-  </Card>
-</TabsContent>
+                {/* Barra de progresso */}
+                <div className="mt-6 p-4 bg-[#DDEB9D] rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-[#143D60]">Progresso de Aprendizado</h4>
+                    <span className="text-sm text-[#143D60]">
+                      {Math.round((educationalContent.filter(c => c.completed).length / educationalContent.length) * 100)}%
+                    </span>
+                  </div>
+                  <Progress value={(educationalContent.filter(c => c.completed).length / educationalContent.length) * 100} className="mb-2" />
+                  <p className="text-sm text-gray-600">
+                    {educationalContent.filter(c => c.completed).length} de {educationalContent.length} conteúdos concluídos
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
     </div>
