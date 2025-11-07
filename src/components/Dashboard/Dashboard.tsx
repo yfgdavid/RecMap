@@ -419,7 +419,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 <CardContent className="space-y-4">
                   <Button className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-white flex items-center justify-center">
                     <a
-                      href="https://recmap-backend-production.up.railway.app/relatorios/infografico"
+                      href={`${import.meta.env.VITE_API_URL}/relatorios/infografico`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center w-full"

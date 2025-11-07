@@ -88,14 +88,15 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [collectionPoints, setCollectionPoints] = useState<CollectionPoint[]>([]);
 
   useEffect(() => {
-    const fetchMapData = async () => {
-      try {
-        const res = await fetch('https://recmap-backend-production.up.railway.app/mapa');
-        if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
-        const data = await res.json();
+  const fetchMapData = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/mapa`);
+      if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
+      const data = await res.json();
 
-        // Transforma pontos e denúncias no mesmo formato
-        const allItems: CollectionPoint[] = data.map((item: any) => {
+      // Transforma pontos e denúncias no mesmo formato
+      const allItems: CollectionPoint[] = data
+        .map((item: any) => {
           if (item.tipo === 'ponto') {
             return {
               id: `${item.tipo}-${item.id}`,
@@ -114,21 +115,22 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
             };
           }
           return null;
-        }).filter(Boolean) as CollectionPoint[];
+        })
+        .filter(Boolean) as CollectionPoint[];
 
-        // Mantém apenas os 5 mais recentes
-        const latestFive = allItems.slice(-5).reverse();
-        setCollectionPoints(latestFive);
+      // Mantém apenas os 5 mais recentes
+      const latestFive = allItems.slice(-5).reverse();
+      setCollectionPoints(latestFive);
 
-      } catch (error) {
-        console.error('Erro ao buscar dados do mapa:', error);
-      }
-    };
+    } catch (error) {
+      console.error('Erro ao buscar dados do mapa:', error);
+    }
+  };
 
-    fetchMapData();
-    const interval = setInterval(fetchMapData, 10000);
-    return () => clearInterval(interval);
-  }, []);
+  fetchMapData();
+  const interval = setInterval(fetchMapData, 10000);
+  return () => clearInterval(interval);
+}, []);
 
 
 
@@ -137,7 +139,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
   const carregarDenuncias = async () => {
     try {
-      const res = await fetch(`https://recmap-backend-production.up.railway.app/denuncias/usuario/${user.id}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/denuncias/usuario/${user.id}`);
       if (!res.ok) throw new Error("Erro ao buscar denúncias");
       const data = await res.json();
       setUserReports(data);
@@ -160,7 +162,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
   const carregarDenunciasPendentes = async () => {
     try {
-      const res = await fetch(`https://recmap-backend-production.up.railway.app/denuncias/pendentes/${user.id}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/denuncias/pendentes/${user.id}`);
       if (!res.ok) throw new Error("Erro ao buscar denúncias pendentes");
       const data = await res.json();
       setPendingValidations(data);
@@ -172,7 +174,6 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   useEffect(() => {
     if (user?.id) carregarDenunciasPendentes();
   }, [user?.id]);
-
 
 
   const [educationalContent, setEducationalContent] = useState([
@@ -199,8 +200,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   };
 
   const getTypeIcon = (type: string) => {
-     if (type === 'ponto') return '♻️'; // Todo ponto de coleta recebe ♻️
-     
+    if (type === 'ponto') return '♻️'; // Todo ponto de coleta recebe ♻️
+
     switch (type) {
       case 'reciclable': return '♻️';
       case 'organic': return '🌱';
@@ -212,16 +213,16 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
 
   const handleValidateReport = async (reportId: number, vote: 'confirm' | 'reject') => {
-   try {
-  const res = await fetch('https://recmap-backend-production.up.railway.app/validacoes', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      id_usuario: user.id,
-      id_denuncia: reportId,
-      tipo_validacao: vote === 'confirm' ? 'CONFIRMAR' : 'CONTESTAR',
-    }),
-  });
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/validacoes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_usuario: user.id,
+          id_denuncia: reportId,
+          tipo_validacao: vote === 'confirm' ? 'CONFIRMAR' : 'CONTESTAR',
+        }),
+      });
 
       if (!res.ok) throw new Error('Erro ao validar denúncia');
 
@@ -229,7 +230,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
       alert(`✅ Denúncia ${vote === 'confirm' ? 'confirmada' : 'contestada'}!`);
 
-      setPendingValidations(prev => prev.filter(report => report.id_denuncia !== reportId));
+      setPendingValidations(prev =>
+        prev.filter(report => report.id_denuncia !== reportId)
+      );
 
       setUserReports(prev =>
         prev.map(report => {
@@ -247,6 +250,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
       alert('❌ Falha ao validar denúncia.');
     }
   };
+
 
 
   const filteredPoints = collectionPoints.filter(point =>
@@ -431,14 +435,17 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     if (newReport.image) formData.append("foto", newReport.image);
 
                     try {
-                      const res = await fetch('https://recmap-backend-production.up.railway.app/denuncias', {
+                      const res = await fetch(`${import.meta.env.VITE_API_URL}/denuncias`, {
                         method: "POST",
                         body: formData,
                       });
+
                       if (!res.ok) throw new Error("Erro ao enviar denúncia");
+
                       alert("✅ Denúncia enviada com sucesso!");
                       setNewReport({ title: "", description: "", location: "", type: "", image: null });
                       await carregarDenuncias();
+
                     } catch (err) {
                       alert("❌ Falha ao enviar denúncia.");
                       console.error(err);
@@ -567,13 +574,16 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     if (newRegister.image) formData.append("foto", newRegister.image);
 
                     try {
-                      const res = await fetch('https://recmap-backend-production.up.railway.app/pontos', {
+                      const res = await fetch(`${import.meta.env.VITE_API_URL}/pontos`, {
                         method: "POST",
                         body: formData,
                       });
+
                       if (!res.ok) throw new Error("Erro ao Registrar ponto de coleta");
+
                       alert("✅ Ponto de coleta registrado com sucesso!");
                       setNewRegister({ title: "", description: "", location: "", type: "", image: null });
+
                     } catch (err) {
                       alert("❌ Falha ao registrar ponto de coleta.");
                       console.error(err);
