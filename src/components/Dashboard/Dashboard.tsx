@@ -419,13 +419,12 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 <CardContent className="space-y-4">
                   <Button className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-white flex items-center justify-center">
                     <a
-                      href="http://localhost:3333/relatorios/infografico"
+                      href="https://recmap-backend-production.up.railway.app/relatorios/infografico"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center w-full"
                     >
-                      <Download className="w-4 h-4 mr-2" />
-                      Baixar Relatório Mensal
+                      Baixar relatório mensal
                     </a>
                   </Button>
 

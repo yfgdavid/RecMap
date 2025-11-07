@@ -90,7 +90,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   useEffect(() => {
     const fetchMapData = async () => {
       try {
-        const res = await fetch('http://localhost:3333/mapa');
+        const res = await fetch('https://recmap-backend-production.up.railway.app/mapa');
         if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
         const data = await res.json();
 
@@ -137,7 +137,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
   const carregarDenuncias = async () => {
     try {
-      const res = await fetch(`http://localhost:3333/denuncias/usuario/${user.id}`);
+      const res = await fetch(`https://recmap-backend-production.up.railway.app/denuncias/usuario/${user.id}`);
       if (!res.ok) throw new Error("Erro ao buscar denúncias");
       const data = await res.json();
       setUserReports(data);
@@ -160,7 +160,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
   const carregarDenunciasPendentes = async () => {
     try {
-      const res = await fetch(`http://localhost:3333/denuncias/pendentes/${user.id}`);
+      const res = await fetch(`https://recmap-backend-production.up.railway.app/denuncias/pendentes/${user.id}`);
       if (!res.ok) throw new Error("Erro ao buscar denúncias pendentes");
       const data = await res.json();
       setPendingValidations(data);
@@ -212,17 +212,16 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
 
   const handleValidateReport = async (reportId: number, vote: 'confirm' | 'reject') => {
-    try {
-
-      const res = await fetch('http://localhost:3333/validacoes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id_usuario: user.id,
-          id_denuncia: reportId,
-          tipo_validacao: vote === 'confirm' ? 'CONFIRMAR' : 'CONTESTAR',
-        }),
-      });
+   try {
+  const res = await fetch('https://recmap-backend-production.up.railway.app/validacoes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      id_usuario: user.id,
+      id_denuncia: reportId,
+      tipo_validacao: vote === 'confirm' ? 'CONFIRMAR' : 'CONTESTAR',
+    }),
+  });
 
       if (!res.ok) throw new Error('Erro ao validar denúncia');
 
@@ -432,7 +431,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     if (newReport.image) formData.append("foto", newReport.image);
 
                     try {
-                      const res = await fetch("http://localhost:3333/denuncias", {
+                      const res = await fetch('https://recmap-backend-production.up.railway.app/denuncias', {
                         method: "POST",
                         body: formData,
                       });
@@ -568,7 +567,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     if (newRegister.image) formData.append("foto", newRegister.image);
 
                     try {
-                      const res = await fetch("http://localhost:3333/pontos", {
+                      const res = await fetch('https://recmap-backend-production.up.railway.app/pontos', {
                         method: "POST",
                         body: formData,
                       });

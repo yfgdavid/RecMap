@@ -31,6 +31,7 @@ export function AuthForm({
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -53,7 +54,7 @@ export function AuthForm({
 
     try {
       const url = authMode === 'register' ? '/auth/register' : '/auth/login';
-      const res = await fetch(`http://localhost:3333${url}`, {
+      const res = await fetch(`https://recmap-backend-production.up.railway.app${url}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -93,6 +94,8 @@ export function AuthForm({
   const isGovernment = userType === 'government';
   const userTypeLabel = isGovernment ? 'Gestor Público' : 'Cidadão';
   const UserIcon = isGovernment ? FileText : Users;
+
+  
 
   return (
 <div className="min-h-screen bg-gradient-to-br from-[#DDEB9D] via-white to-[#A0C878] flex flex-col items-center justify-center p-4 space-y-8">
