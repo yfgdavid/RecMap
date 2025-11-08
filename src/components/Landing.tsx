@@ -167,7 +167,7 @@ export function Landing({ onUserTypeSelect, onCreateAccount }: LandingProps) {
                 </div>
                 <CardTitle className="text-2xl text-[#143D60]">Sou Gestor Público</CardTitle>
                 <CardDescription className="text-lg">
-                  Represento órgãos governamentais e preciso de dados para gestão
+                  Represento órgãos governamentais e preciso de dados para gestão eficiente de resíduos
                 </CardDescription>
               </CardHeader>
               <CardContent>
