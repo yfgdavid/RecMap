@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Landing } from './components/Landing';
 import { AuthForm } from './components/Auth/AuthForm';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { CitizenDashboard } from './components/Dashboard/CitizenDashboard';
 
 export type UserType = 'citizen' | 'government' | null;
-export type AuthMode = 'login' | 'register';
+export type AuthMode = 'login' | 'register' | 'forgot' | 'reset';
 
 export interface User {
   id: string;
@@ -18,6 +18,18 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedUserType, setSelectedUserType] = useState<UserType>(null);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [resetToken, setResetToken] = useState<string | null>(null);
+
+  // Detecta token de reset na URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('resetToken');
+    if (token) {
+      setResetToken(token);
+      setAuthMode('reset');
+      setSelectedUserType('citizen'); // ou 'government' se quiser permitir
+    }
+  }, []);
 
   const handleUserTypeSelect = (type: UserType) => {
     setSelectedUserType(type);
@@ -33,7 +45,7 @@ export default function App() {
     setCurrentUser(null);
     setSelectedUserType(null);
     setAuthMode('login');
-    localStorage.removeItem('token'); // limpa token
+    localStorage.removeItem('token');
   };
 
   const handleBackToLanding = () => {
@@ -41,30 +53,33 @@ export default function App() {
     setAuthMode('login');
   };
 
-  // Se não há usuário logado e nenhum tipo selecionado, mostra landing
+  // Mostra landing se nenhum usuário selecionado e não logado
   if (!currentUser && !selectedUserType) {
     return <Landing onUserTypeSelect={handleUserTypeSelect} onCreateAccount={handleCreateAccount} />;
   }
 
-  // Se tipo foi selecionado mas não há usuário logado, mostra formulário de auth
+  // Formulário de autenticação
   if (!currentUser && selectedUserType) {
     return (
       <AuthForm
         userType={selectedUserType}
         authMode={authMode}
-        onLoginSuccess={setCurrentUser} // ✅ recebe User diretamente
+        onLoginSuccess={setCurrentUser}
         onModeChange={setAuthMode}
         onBack={handleBackToLanding}
+        resetToken={resetToken || undefined}
       />
     );
   }
 
-  // Se há usuário logado, mostra dashboard apropriado
- if (currentUser) {
-  if (currentUser.type === 'government') {
-    return <Dashboard user={currentUser} onLogout={handleLogout} />;
-  } else {
-    return <CitizenDashboard user={currentUser} onLogout={handleLogout} />;
+  // Dashboard
+  if (currentUser) {
+    if (currentUser.type === 'government') {
+      return <Dashboard user={currentUser} onLogout={handleLogout} />;
+    } else {
+      return <CitizenDashboard user={currentUser} onLogout={handleLogout} />;
+    }
   }
-}
+
+  return null;
 }
