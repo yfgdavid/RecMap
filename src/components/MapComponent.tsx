@@ -144,11 +144,10 @@ const MapComponent = () => {
           )}
         >
           <Popup>
-            <div className="space-y-2">
-              <strong>{denuncia.titulo}</strong>
-              <p className="text-sm text-gray-600">{denuncia.descricao}</p>
+            <div className="w-56 rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white">
+
               {denuncia.foto && (
-                <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
+                <div className="w-full aspect-[4/3] overflow-hidden">
                   <img
                     src={denuncia.foto}
                     alt={denuncia.titulo}
@@ -156,8 +155,25 @@ const MapComponent = () => {
                   />
                 </div>
               )}
+
+              <div className="p-3 space-y-1">
+                <h3 className="font-semibold text-[#143D60] leading-tight">{denuncia.titulo}</h3>
+                <p className="text-xs text-gray-600 leading-snug">{denuncia.descricao}</p>
+
+                <span
+                  className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md
+          ${denuncia.status.toLowerCase() === "encaminhada"
+                      ? "bg-orange-100 text-orange-700"
+                      : "bg-red-100 text-red-700"
+                    }`}
+                >
+                  {denuncia.status}
+                </span>
+              </div>
+
             </div>
           </Popup>
+
         </Marker>
       ))}
 
@@ -169,11 +185,10 @@ const MapComponent = () => {
           icon={createColoredIcon("#069240")}
         >
           <Popup>
-            <div className="space-y-2">
-              <strong>{ponto.titulo}</strong>
-              <p className="text-sm text-gray-600">{ponto.tipo_residuo}</p>
+            <div className="w-56 rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white">
+
               {ponto.foto && (
-                <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
+                <div className="w-full aspect-[4/3] overflow-hidden">
                   <img
                     src={ponto.foto}
                     alt={ponto.titulo}
@@ -181,8 +196,19 @@ const MapComponent = () => {
                   />
                 </div>
               )}
+
+              <div className="p-3 space-y-1">
+                <h3 className="font-semibold text-[#143D60] leading-tight">{ponto.titulo}</h3>
+                <p className="text-xs text-gray-600 leading-snug">{ponto.descricao}</p>
+
+                <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md bg-green-100 text-green-700">
+                  {ponto.tipo_residuo}
+                </span>
+              </div>
+
             </div>
           </Popup>
+
         </Marker>
       ))}
 
