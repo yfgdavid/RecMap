@@ -3,6 +3,8 @@ import { Landing } from './components/Landing';
 import { AuthForm } from './components/Auth/AuthForm';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { CitizenDashboard } from './components/Dashboard/CitizenDashboard';
+// import { LoadingProvider, useLoading } from './hooks/useLoading';
+// import { LoadingOverlay } from './components/LoadingOverlay';
 
 export type UserType = 'citizen' | 'government' | null;
 export type AuthMode = 'login' | 'register' | 'forgot' | 'reset';
@@ -14,11 +16,12 @@ export interface User {
   type: UserType;
 }
 
-export default function App() {
+function AppContent() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedUserType, setSelectedUserType] = useState<UserType>(null);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [resetToken, setResetToken] = useState<string | null>(null);
+  // const { isLoading, loadingMessage } = useLoading();
 
   // Detecta token de reset na URL
   useEffect(() => {
@@ -55,31 +58,58 @@ export default function App() {
 
   // Mostra landing se nenhum usuário selecionado e não logado
   if (!currentUser && !selectedUserType) {
-    return <Landing onUserTypeSelect={handleUserTypeSelect} onCreateAccount={handleCreateAccount} />;
+    return (
+      <>
+        <Landing onUserTypeSelect={handleUserTypeSelect} onCreateAccount={handleCreateAccount} />
+        {/* {isLoading && <LoadingOverlay message={loadingMessage} />} */}
+      </>
+    );
   }
 
   // Formulário de autenticação
   if (!currentUser && selectedUserType) {
     return (
-      <AuthForm
-        userType={selectedUserType}
-        authMode={authMode}
-        onLoginSuccess={setCurrentUser}
-        onModeChange={setAuthMode}
-        onBack={handleBackToLanding}
-        resetToken={resetToken || undefined}
-      />
+      <>
+        <AuthForm
+          userType={selectedUserType}
+          authMode={authMode}
+          onLoginSuccess={setCurrentUser}
+          onModeChange={setAuthMode}
+          onBack={handleBackToLanding}
+          resetToken={resetToken || undefined}
+        />
+        {/* {isLoading && <LoadingOverlay message={loadingMessage} />} */}
+      </>
     );
   }
 
   // Dashboard
   if (currentUser) {
     if (currentUser.type === 'government') {
-      return <Dashboard user={currentUser} onLogout={handleLogout} />;
+      return (
+        <>
+          <Dashboard user={currentUser} onLogout={handleLogout} />
+          {/* {isLoading && <LoadingOverlay message={loadingMessage} />} */}
+        </>
+      );
     } else {
-      return <CitizenDashboard user={currentUser} onLogout={handleLogout} />;
+      return (
+        <>
+          <CitizenDashboard user={currentUser} onLogout={handleLogout} />
+          {/* {isLoading && <LoadingOverlay message={loadingMessage} />} */}
+        </>
+      );
     }
   }
 
   return null;
+}
+
+export default function App() {
+  return <AppContent />;
+  // return (
+  //   <LoadingProvider>
+  //     <AppContent />
+  //   </LoadingProvider>
+  // );
 }
