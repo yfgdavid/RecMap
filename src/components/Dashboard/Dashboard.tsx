@@ -1,24 +1,51 @@
-import React, { useState } from 'react';
-import { Button } from '../ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Badge } from '../ui/badge';
+import React, { useState } from "react";
+import { Button } from "../ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { Badge } from "../ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
-} from '../ui/dropdown-menu';
-import { RecMapLogo } from '../RecMapLogo';
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { RecMapLogo } from "../RecMapLogo";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line
-} from 'recharts';
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+} from "recharts";
 import {
-  FileText, MapPin, Users, TrendingUp, Download,
-  AlertTriangle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send
+  FileText,
+  MapPin,
+  Users,
+  TrendingUp,
+  Download,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Leaf,
+  LogOut,
+  MoreVertical,
+  Send,
 } from 'lucide-react';
-import { User } from '../../App';
+import { User } from '../../App'; // CORRIGIDO
+
 
 interface DashboardProps {
   user: User;
@@ -26,74 +53,146 @@ interface DashboardProps {
 }
 
 export function Dashboard({ user, onLogout }: DashboardProps) {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [reports, setReports] = useState([
-    { id: 1, titulo: 'Lixão próximo ao Rio Capibaribe', regiao: 'Centro', status: 'pendente', data: '2024-10-07' },
-    { id: 2, titulo: 'Entulho em terreno baldio', regiao: 'Norte', status: 'validada', data: '2024-10-06' },
-    { id: 3, titulo: 'Esgoto a céu aberto', regiao: 'Sul', status: 'encaminhada', data: '2024-10-05' },
-    { id: 4, titulo: 'Acúmulo de lixo na praça', regiao: 'Leste', status: 'pendente', data: '2024-10-04' },
-    { id: 5, titulo: 'Descarte irregular de entulho', regiao: 'Centro', status: 'encaminhada', data: '2024-10-03' }
+    {
+      id: 1,
+      titulo: "Lixão próximo ao Rio Capibaribe",
+      regiao: "Centro",
+      status: "pendente",
+      data: "2024-10-07",
+    },
+    {
+      id: 2,
+      titulo: "Entulho em terreno baldio",
+      regiao: "Norte",
+      status: "validada",
+      data: "2024-10-06",
+    },
+    {
+      id: 3,
+      titulo: "Esgoto a céu aberto",
+      regiao: "Sul",
+      status: "encaminhada",
+      data: "2024-10-05",
+    },
+    {
+      id: 4,
+      titulo: "Acúmulo de lixo na praça",
+      regiao: "Leste",
+      status: "pendente",
+      data: "2024-10-04",
+    },
+    {
+      id: 5,
+      titulo: "Descarte irregular de entulho",
+      regiao: "Centro",
+      status: "encaminhada",
+      data: "2024-10-03",
+    },
   ]);
 
   // Dados mockados para os gráficos
   const reportsData = [
-    { month: 'Jan', denuncias: 45, resolvidas: 32 },
-    { month: 'Fev', denuncias: 52, resolvidas: 41 },
-    { month: 'Mar', denuncias: 38, resolvidas: 35 },
-    { month: 'Abr', denuncias: 61, resolvidas: 45 },
-    { month: 'Mai', denuncias: 55, resolvidas: 48 },
-    { month: 'Jun', denuncias: 67, resolvidas: 52 }
+    { month: "Jan", denuncias: 45, resolvidas: 32 },
+    { month: "Fev", denuncias: 52, resolvidas: 41 },
+    { month: "Mar", denuncias: 38, resolvidas: 35 },
+    { month: "Abr", denuncias: 61, resolvidas: 45 },
+    { month: "Mai", denuncias: 55, resolvidas: 48 },
+    { month: "Jun", denuncias: 67, resolvidas: 52 },
   ];
 
   const wasteTypesData = [
-    { name: 'Orgânico', value: 40, color: '#A0C878' },
-    { name: 'Reciclável', value: 35, color: '#DDEB9D' },
-    { name: 'Perigoso', value: 15, color: '#8BB668' },
-    { name: 'Eletrônico', value: 10, color: '#143D60' }
+    { name: "Orgânico", value: 40, color: "#A0C878" },
+    { name: "Reciclável", value: 35, color: "#DDEB9D" },
+    { name: "Perigoso", value: 15, color: "#8BB668" },
+    { name: "Eletrônico", value: 10, color: "#143D60" },
   ];
 
   const regionData = [
-    { regiao: 'Centro', denuncias: 45, status: 'Alto' },
-    { regiao: 'Norte', denuncias: 32, status: 'Médio' },
-    { regiao: 'Sul', denuncias: 28, status: 'Médio' },
-    { regiao: 'Leste', denuncias: 52, status: 'Alto' },
-    { regiao: 'Oeste', denuncias: 18, status: 'Baixo' }
+    { regiao: "Centro", denuncias: 45, status: "Alto" },
+    { regiao: "Norte", denuncias: 32, status: "Médio" },
+    { regiao: "Sul", denuncias: 28, status: "Médio" },
+    { regiao: "Leste", denuncias: 52, status: "Alto" },
+    { regiao: "Oeste", denuncias: 18, status: "Baixo" },
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pendente': return 'bg-yellow-500';
-      case 'validada': return 'bg-blue-500';
-      case 'encaminhada': return 'bg-orange-500';
-      case 'resolvida': return 'bg-green-500';
-      default: return 'bg-gray-500';
+      case "pendente":
+        return "bg-yellow-500";
+      case "validada":
+        return "bg-blue-500";
+      case "encaminhada":
+        return "bg-orange-500";
+      case "resolvida":
+        return "bg-green-500";
+      default:
+        return "bg-gray-500";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'pendente': return Clock;
-      case 'validada': return CheckCircle;
-      case 'encaminhada': return TrendingUp;
-      case 'resolvida': return CheckCircle;
-      default: return AlertTriangle;
+      case "pendente":
+        return Clock;
+      case "validada":
+        return CheckCircle;
+      case "encaminhada":
+        return TrendingUp;
+      case "resolvida":
+        return CheckCircle;
+      default:
+        return AlertTriangle;
     }
   };
 
   const handleForwardReport = (reportId: number) => {
-    setReports(prevReports =>
-      prevReports.map(report =>
-        report.id === reportId ? { ...report, status: 'encaminhada' } : report
+    setReports((prevReports) =>
+      prevReports.map((report) =>
+        report.id === reportId ? { ...report, status: "encaminhada" } : report
       )
     );
   };
 
+  // CÓDIGO ATUALIZADO COMPLETO DO TRECHO
   const handleResolveReport = (reportId: number) => {
-    setReports(prevReports =>
-      prevReports.map(report =>
-        report.id === reportId ? { ...report, status: 'resolvida' } : report
+    setReports((prevReports) =>
+      prevReports.map((report) =>
+        report.id === reportId ? { ...report, status: "resolvida" } : report
       )
     );
+  };
+
+  // NOVA FUNÇÃO: Lógica para baixar o relatório
+  const handleDownloadReport = async () => {
+    try {
+      // Faz a requisição para o backend Node
+      const response = await fetch("http://localhost:3333/relatorios/infografico", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao gerar o PDF");
+      }
+
+      // Converte a resposta binária em um blob
+      const blob = await response.blob();
+
+      // Cria um link temporário para baixar o PDF
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "relatorio_recmap.pdf"; // nome do arquivo
+      document.body.appendChild(a);
+      a.click();
+
+      // Remove o link temporário
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Erro ao baixar o relatório:", error);
+    }
   };
 
   return (
@@ -120,18 +219,41 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 bg-white shadow-sm">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-[#143D60] data-[state=active]:text-white">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
+          <TabsList
+              className="
+                flex w-max max-w-full overflow-x-auto whitespace-nowrap gap-2 bg-white shadow-sm
+                justify-start
+                lg:justify-center lg:overflow-visible lg:w-auto
+              "
+            >
+              
+            <TabsTrigger
+              value="overview"
+              className="data-[state=active]:bg-[#143D60] data-[state=active]:text-white"
+            >
               Visão Geral
             </TabsTrigger>
-            <TabsTrigger value="reports" className="data-[state=active]:bg-[#143D60] data-[state=active]:text-white">
+            <TabsTrigger
+              value="reports"
+              className="data-[state=active]:bg-[#143D60] data-[state=active]:text-white"
+            >
               Denúncias
             </TabsTrigger>
-            <TabsTrigger value="analytics" className="data-[state=active]:bg-[#143D60] data-[state=active]:text-white">
+            <TabsTrigger
+              value="analytics"
+              className="data-[state=active]:bg-[#143D60] data-[state=active]:text-white"
+            >
               Análises
             </TabsTrigger>
-            <TabsTrigger value="exports" className="data-[state=active]:bg-[#143D60] data-[state=active]:text-white">
+            <TabsTrigger
+              value="exports"
+              className="data-[state=active]:bg-[#143D60] data-[state=active]:text-white"
+            >
               Relatórios
             </TabsTrigger>
           </TabsList>
@@ -144,7 +266,9 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600">Total de Denúncias</p>
+                      <p className="text-sm text-gray-600">
+                        Total de Denúncias
+                      </p>
                       <p className="text-2xl font-bold text-[#143D60]">318</p>
                       <p className="text-xs text-green-600">+12% este mês</p>
                     </div>
@@ -157,9 +281,13 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600">Denúncias Resolvidas</p>
+                      <p className="text-sm text-gray-600">
+                        Denúncias Resolvidas
+                      </p>
                       <p className="text-2xl font-bold text-[#143D60]">253</p>
-                      <p className="text-xs text-green-600">79.6% de resolução</p>
+                      <p className="text-xs text-green-600">
+                        79.6% de resolução
+                      </p>
                     </div>
                     <CheckCircle className="w-8 h-8 text-[#A0C878]" />
                   </div>
@@ -197,8 +325,12 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-[#143D60]">Denúncias por Mês</CardTitle>
-                  <CardDescription>Evolução das denúncias e resoluções</CardDescription>
+                  <CardTitle className="text-[#143D60]">
+                    Denúncias por Mês
+                  </CardTitle>
+                  <CardDescription>
+                    Evolução das denúncias e resoluções
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ResponsiveContainer width="100%" height={300}>
@@ -207,8 +339,16 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                       <XAxis dataKey="month" />
                       <YAxis />
                       <Tooltip />
-                      <Bar dataKey="denuncias" fill="#143D60" name="Denúncias" />
-                      <Bar dataKey="resolvidas" fill="#A0C878" name="Resolvidas" />
+                      <Bar
+                        dataKey="denuncias"
+                        fill="#143D60"
+                        name="Denúncias"
+                      />
+                      <Bar
+                        dataKey="resolvidas"
+                        fill="#A0C878"
+                        name="Resolvidas"
+                      />
                     </BarChart>
                   </ResponsiveContainer>
                 </CardContent>
@@ -216,13 +356,21 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-[#143D60]">Tipos de Resíduos</CardTitle>
-                  <CardDescription>Distribuição das denúncias por categoria</CardDescription>
+                  <CardTitle className="text-[#143D60]">
+                    Tipos de Resíduos
+                  </CardTitle>
+                  <CardDescription>
+                    Distribuição das denúncias por categoria
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {/* Gráfico de Pizza Responsivo */}
                   <div className="w-full">
-                    <ResponsiveContainer width="100%" height={280} className="hidden md:block">
+                    <ResponsiveContainer
+                      width="100%"
+                      height={280}
+                      className="hidden md:block"
+                    >
                       <PieChart>
                         <Pie
                           data={wasteTypesData}
@@ -231,7 +379,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                           outerRadius={90}
                           dataKey="value"
                           label={({ name, value }) => `${name}: ${value}%`}
-                          labelLine={{ stroke: '#A0C878', strokeWidth: 1 }}
+                          labelLine={{ stroke: "#A0C878", strokeWidth: 1 }}
                         >
                           {wasteTypesData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
@@ -242,7 +390,11 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                     </ResponsiveContainer>
 
                     {/* Versão Mobile - Gráfico Menor */}
-                    <ResponsiveContainer width="100%" height={240} className="md:hidden">
+                    <ResponsiveContainer
+                      width="100%"
+                      height={240}
+                      className="md:hidden"
+                    >
                       <PieChart>
                         <Pie
                           data={wasteTypesData}
@@ -262,14 +414,21 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                     {/* Legenda Customizada Responsiva */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
                       {wasteTypesData.map((item, index) => (
-                        <div key={index} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div
+                          key={index}
+                          className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                        >
                           <div
                             className="w-4 h-4 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
                             style={{ backgroundColor: item.color }}
                           ></div>
                           <div className="flex flex-col min-w-0">
-                            <span className="text-sm font-medium text-[#A0C878] truncate">{item.name}</span>
-                            <span className="text-xs text-gray-600">{item.value}%</span>
+                            <span className="text-sm font-medium text-[#A0C878] truncate">
+                              {item.name}
+                            </span>
+                            <span className="text-xs text-gray-600">
+                              {item.value}%
+                            </span>
                           </div>
                         </div>
                       ))}
@@ -284,26 +443,40 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           <TabsContent value="reports" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-[#143D60]">Denúncias Recentes</CardTitle>
-                <CardDescription>Últimas denúncias registradas na plataforma</CardDescription>
+                <CardTitle className="text-[#143D60]">
+                  Denúncias Recentes
+                </CardTitle>
+                <CardDescription>
+                  Últimas denúncias registradas na plataforma
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {reports.map((report) => {
                     const StatusIcon = getStatusIcon(report.status);
-                    const canTakeAction = report.status !== 'resolvida';
-
+                    const canTakeAction = report.status !== "resolvida";
                     return (
-                      <div key={report.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 gap-3">
+                      <div
+                        key={report.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 gap-3"
+                      >
                         <div className="flex items-center gap-4 flex-1 min-w-0">
                           <StatusIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-[#143D60]">{report.titulo}</h4>
-                            <p className="text-sm text-gray-600">{report.regiao} • {report.data}</p>
+                            <h4 className="font-medium text-[#143D60]">
+                              {report.titulo}
+                            </h4>
+                            <p className="text-sm text-gray-600">
+                              {report.regiao} • {report.data}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <Badge className={`${getStatusColor(report.status)} text-white`}>
+                          <Badge
+                            className={`${getStatusColor(
+                              report.status
+                            )} text-white`}
+                          >
                             {report.status}
                           </Badge>
                           {canTakeAction && (
@@ -318,18 +491,23 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-56">
-                                {(report.status === 'pendente' || report.status === 'validada') && (
+                                {(report.status === "pendente" ||
+                                  report.status === "validada") && (
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleForwardReport(report.id)
+                                      }
+                                      className="cursor-pointer"
+                                    >
+                                      <Send className="w-4 h-4 mr-2 text-orange-500" />
+                                      <span>Encaminhar</span>
+                                    </DropdownMenuItem>
+                                  )}
+                                {report.status === "encaminhada" && (
                                   <DropdownMenuItem
-                                    onClick={() => handleForwardReport(report.id)}
-                                    className="cursor-pointer"
-                                  >
-                                    <Send className="w-4 h-4 mr-2 text-orange-500" />
-                                    <span>Encaminhar</span>
-                                  </DropdownMenuItem>
-                                )}
-                                {report.status === 'encaminhada' && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleResolveReport(report.id)}
+                                    onClick={() =>
+                                      handleResolveReport(report.id)
+                                    }
                                     className="cursor-pointer"
                                   >
                                     <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
@@ -349,21 +527,36 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-[#143D60]">Denúncias por Região</CardTitle>
-                <CardDescription>Concentração de problemas ambientais por área</CardDescription>
+                <CardTitle className="text-[#143D60]">
+                  Denúncias por Região
+                </CardTitle>
+                <CardDescription>
+                  Concentração de problemas ambientais por área
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {regionData.map((region, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border rounded"
+                    >
                       <div className="flex items-center gap-3">
                         <MapPin className="w-5 h-5 text-[#143D60]" />
                         <span className="font-medium">{region.regiao}</span>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-sm text-gray-600">{region.denuncias} denúncias</span>
+                        <span className="text-sm text-gray-600">
+                          {region.denuncias} denúncias
+                        </span>
                         <Badge
-                          variant={region.status === 'Alto' ? 'destructive' : region.status === 'Médio' ? 'secondary' : 'default'}
+                          variant={
+                            region.status === "Alto"
+                              ? "destructive"
+                              : region.status === "Médio"
+                                ? "secondary"
+                                : "default"
+                          }
                         >
                           {region.status}
                         </Badge>
@@ -379,8 +572,12 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           <TabsContent value="analytics" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle className="text-[#143D60]">Tendência de Resolução</CardTitle>
-                <CardDescription>Taxa de resolução de denúncias ao longo do tempo</CardDescription>
+                <CardTitle className="text-[#143D60]">
+                  Tendência de Resolução
+                </CardTitle>
+                <CardDescription>
+                  Taxa de resolução de denúncias ao longo do tempo
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={400}>
@@ -413,22 +610,26 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-[#143D60]">Relatório de Denúncias</CardTitle>
-                  <CardDescription>Exportar dados de denúncias por período</CardDescription>
+                  <CardTitle className="text-[#143D60]">
+                    Relatório de Denúncias
+                  </CardTitle>
+                  <CardDescription>
+                    Exportar dados de denúncias por período
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-white flex items-center justify-center">
-                    <a
-                      href={`${import.meta.env.VITE_API_URL}/relatorios/infografico`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center w-full"
-                    >
-                      Baixar relatório mensal
-                    </a>
+                  <Button
+                    onClick={handleDownloadReport} // AQUI ESTÁ A CHAMADA DA FUNÇÃO
+                    className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-white flex items-center justify-center"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Baixar relatório mensal
                   </Button>
 
-                  <Button variant="outline" className="w-full border-[#A0C878] text-[#143D60]">
+                  <Button
+                    variant="outline"
+                    className="w-full border-[#A0C878] text-[#143D60]"
+                  >
                     <FileText className="w-4 h-4 mr-2" />
                     Relatório Customizado
                   </Button>
@@ -437,15 +638,22 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-[#143D60]">Dados de Participação</CardTitle>
-                  <CardDescription>Métricas de engajamento dos usuários</CardDescription>
+                  <CardTitle className="text-[#143D60]">
+                    Dados de Participação
+                  </CardTitle>
+                  <CardDescription>
+                    Métricas de engajamento dos usuários
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Button className="w-full bg-[#143D60] hover:bg-[#0F2F4A] text-white">
                     <Download className="w-4 h-4 mr-2" />
                     Relatório de Usuários
                   </Button>
-                  <Button variant="outline" className="w-full border-[#143D60] text-[#143D60]">
+                  <Button
+                    variant="outline"
+                    className="w-full border-[#143D60] text-[#143D60]"
+                  >
                     <TrendingUp className="w-4 h-4 mr-2" />
                     Análise de Tendências
                   </Button>

@@ -3,8 +3,9 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { Alert, AlertDescription } from '../ui/alert';
 import { RecMapLogo } from '../RecMapLogo';
-import { ArrowLeft, Users, FileText, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Users, FileText, Eye, EyeOff, AlertCircle, CheckCircle2, X } from 'lucide-react';
 import { UserType, AuthMode, User } from '../../App';
 
 interface AuthFormProps {
@@ -128,13 +129,35 @@ export function AuthForm({
       }
 
       if (authMode === 'login') {
+        // Verifica se a resposta tem a estrutura esperada
+        if (!data.user && !data.usuario) {
+          console.error('Resposta da API:', data);
+          setError('Resposta inválida da API. Estrutura de dados não reconhecida.');
+          return;
+        }
+
+        // Tenta diferentes estruturas de resposta possíveis
+        const userData = data.user || data.usuario || data;
+        const userId = userData.id_usuario || userData.id || userData.usuario_id;
+        const userName = userData.nome || userData.name;
+        const userEmail = userData.email;
+
+        if (!userId || !userName || !userEmail) {
+          console.error('Resposta da API:', data);
+          setError('Dados do usuário incompletos na resposta da API.');
+          return;
+        }
+
         const user: User = {
-          id: data.user.id_usuario,
-          name: data.user.nome,
-          email: data.user.email,
+          id: String(userId),
+          name: userName,
+          email: userEmail,
           type: userType
         };
-        localStorage.setItem('token', data.token);
+        
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+        }
         onLoginSuccess?.(user);
         setSuccess('Login realizado com sucesso!');
       } else {
@@ -143,8 +166,16 @@ export function AuthForm({
       }
 
     } catch (err: any) {
-      console.error(err);
-      setError('Erro na requisição: ' + err.message);
+      console.error('Erro na requisição:', err);
+      const errorMessage = err.message || 'Erro desconhecido';
+      // Não mostra detalhes técnicos de erro JavaScript para o usuário
+      if (errorMessage.includes('Cannot read properties')) {
+        setError('Erro ao processar resposta do servidor. Verifique a conexão e tente novamente.');
+      } else if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        setError('Erro de conexão. Verifique sua internet e tente novamente.');
+      } else {
+        setError('Erro na requisição. Tente novamente mais tarde.');
+      }
     }
   };
 
@@ -179,8 +210,40 @@ export function AuthForm({
           </CardHeader>
 
           <CardContent>
-            {error && <p className="text-red-600 mb-2">{error}</p>}
-            {success && <p className="text-green-600 mb-2">{success}</p>}
+            {error && (
+              <Alert variant="destructive" className="mb-4 border-red-300 bg-red-50 animate-in slide-in-from-top-2">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="text-red-800">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex-1">{error}</span>
+                    <button
+                      onClick={() => setError(null)}
+                      className="flex-shrink-0 hover:bg-red-100 rounded-full p-1 transition-colors"
+                      aria-label="Fechar"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
+            {success && (
+              <Alert className="mb-4 border-green-300 bg-green-50 animate-in slide-in-from-top-2">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-800">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="flex-1">{success}</span>
+                    <button
+                      onClick={() => setSuccess(null)}
+                      className="flex-shrink-0 hover:bg-green-100 rounded-full p-1 transition-colors"
+                      aria-label="Fechar"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Forgot */}

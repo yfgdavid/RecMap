@@ -7,6 +7,7 @@ import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Progress } from '../ui/progress';
+import { Alert, AlertDescription } from '../ui/alert';
 import { HistoryTimeline } from '../Education/HistoryTimeline';
 import { RecMapLogo } from '../RecMapLogo';
 import { useEffect } from 'react';
@@ -16,7 +17,7 @@ import {
   MapPin, Camera, Send, History, Award, TrendingUp,
   BookOpen, Recycle, AlertTriangle, CheckCircle,
   Clock, Star, Leaf, LogOut, Filter, Plus,
-  Link
+  Link, CheckCircle2, AlertCircle, X
 } from 'lucide-react';
 
 import { User } from '../../App';
@@ -35,12 +36,14 @@ interface CitizenDashboardProps {
 }
 
 interface CollectionPoint {
-  id: number;
+  id: number | string;
   name: string;
   type: string;
   address: string;
-  distance: string;
+  distance?: string;
   status: 'active' | 'maintenance' | 'full';
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface Report {
@@ -65,7 +68,15 @@ interface Report {
 export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [activeTab, setActiveTab] = useState('map');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [reportSuccess, setReportSuccess] = useState<string | null>(null);
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [validationSuccess, setValidationSuccess] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [pointSuccess, setPointSuccess] = useState<string | null>(null);
+  const [pointError, setPointError] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [newReport, setNewReport] = useState({
+
     title: '',
     description: '',
     location: '',
@@ -85,56 +96,70 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   // Dados mockados
 
 
+
   const [collectionPoints, setCollectionPoints] = useState<CollectionPoint[]>([]);
 
   useEffect(() => {
-  const fetchMapData = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/mapa`);
-      if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
-      const data = await res.json();
+    const fetchMapData = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/mapa`);
+        if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
+        const data = await res.json();
 
-      // Transforma pontos e denúncias no mesmo formato
-      const allItems: CollectionPoint[] = data
-        .map((item: any) => {
-          if (item.tipo === 'ponto') {
-            return {
-              id: `${item.tipo}-${item.id}`,
-              name: item.titulo,
-              type: 'ponto',
-              address: item.descricao,
-              status: 'active'
-            };
-          } else if (item.tipo === 'denuncia') {
-            return {
-              id: `${item.tipo}-${item.id}`,
-              name: item.titulo,
-              type: 'denuncia',
-              address: item.descricao,
-              status: item.status.toLowerCase()
-            };
-          }
-          return null;
-        })
-        .filter(Boolean) as CollectionPoint[];
+        // Transforma pontos e denúncias no mesmo formato
+        const allItems: CollectionPoint[] = data
+          .map((item: any) => {
+            if (item.tipo === 'ponto') {
+              return {
+                id: `${item.tipo}-${item.id}`,
+                name: item.titulo,
+                type: 'ponto',
+                address: item.descricao,
+<<<<<<< HEAD
+                status: 'active'
+=======
+                status: 'active',
+                latitude: item.latitude,
+                longitude: item.longitude
+>>>>>>> ce1b5955815fe288438c230789e6cc6c5db9bbda
+              };
+            } else if (item.tipo === 'denuncia') {
+              return {
+                id: `${item.tipo}-${item.id}`,
+                name: item.titulo,
+                type: 'denuncia',
+                address: item.descricao,
+<<<<<<< HEAD
+                status: item.status.toLowerCase()
+=======
+                status: item.status.toLowerCase(),
+                latitude: item.latitude,
+                longitude: item.longitude
+>>>>>>> ce1b5955815fe288438c230789e6cc6c5db9bbda
+              };
+            }
+            return null;
+          })
+          .filter(Boolean) as CollectionPoint[];
 
-      // Mantém apenas os 5 mais recentes
-      const latestFive = allItems.slice(-5).reverse();
-      setCollectionPoints(latestFive);
+        // Mantém apenas os 5 mais recentes
+        const latestFive = allItems.slice(-5).reverse();
+        setCollectionPoints(latestFive);
 
-    } catch (error) {
-      console.error('Erro ao buscar dados do mapa:', error);
-    }
-  };
+      } catch (error) {
+        console.error('Erro ao buscar dados do mapa:', error);
+      }
+    };
 
-  fetchMapData();
-  const interval = setInterval(fetchMapData, 10000);
-  return () => clearInterval(interval);
-}, []);
+    fetchMapData();
+    const interval = setInterval(fetchMapData, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
 
 
   const [userReports, setUserReports] = useState<Report[]>([]);
+
 
 
   const carregarDenuncias = async () => {
@@ -187,6 +212,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
 
 
+
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-500';
@@ -228,7 +255,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
       const novaValidacao = await res.json();
 
-      alert(`✅ Denúncia ${vote === 'confirm' ? 'confirmada' : 'contestada'}!`);
+      setValidationSuccess(`Denúncia ${vote === 'confirm' ? 'confirmada' : 'contestada'}!`);
+      setTimeout(() => setValidationSuccess(null), 5000);
 
       setPendingValidations(prev =>
         prev.filter(report => report.id_denuncia !== reportId)
@@ -247,7 +275,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
       );
     } catch (err) {
       console.error('Erro ao validar denúncia:', err);
-      alert('❌ Falha ao validar denúncia.');
+      setValidationError('Falha ao validar denúncia.');
+      setTimeout(() => setValidationError(null), 5000);
     }
   };
 
@@ -291,8 +320,14 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Navegação Responsiva */}
-          <div className="bg-white shadow-sm rounded-lg p-2 overflow-hidden">
-            <TabsList className="inline-flex flex-wrap justify-center w-full gap-2 bg-transparent">
+
+          <div className="shadow-sm rounded-lg p-2 overflow-x-auto overflow-y-hidden" >
+            <TabsList className="
+              flex w-full overflow-x-auto whitespace-nowrap gap-2
+              justify-start
+              lg:overflow-visible lg:justify-center lg:w-auto
+              ">
+
               <TabsTrigger
                 value="map"
                 className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
@@ -300,7 +335,6 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                 <MapPin className="w-4 h-4" />
                 <span>Mapa</span>
               </TabsTrigger>
-
               <TabsTrigger
                 value="report"
                 className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
@@ -308,7 +342,6 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                 <Camera className="w-4 h-4" />
                 <span>Denunciar</span>
               </TabsTrigger>
-
               <TabsTrigger
                 value="register"
                 className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
@@ -316,7 +349,6 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                 <Camera className="w-4 h-4" />
                 <span>Registrar</span>
               </TabsTrigger>
-
               <TabsTrigger
                 value="my-reports"
                 className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
@@ -324,7 +356,6 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                 <History className="w-4 h-4" />
                 <span>Minhas Denúncias</span>
               </TabsTrigger>
-
               <TabsTrigger
                 value="validate"
                 className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
@@ -332,7 +363,6 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                 <CheckCircle className="w-4 h-4" />
                 <span>Validar</span>
               </TabsTrigger>
-
               <TabsTrigger
                 value="education"
                 className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
@@ -342,6 +372,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
               </TabsTrigger>
             </TabsList>
           </div>
+
           {/* Mapa */}
           <TabsContent value="map" className="space-y-6">
             <Card>
@@ -374,7 +405,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                   <div className="relative w-full">
                     {/* Aspect ratio container para manter proporções */}
 
-                    <MapComponent />
+                    <MapComponent selectedLocation={selectedLocation} />
                     {/* Overlay com legenda permanece igual */}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#143D60]/90 to-transparent p-4">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 text-white">
@@ -394,10 +425,18 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                   </div>
                 </div>
 
-
                 <div className="space-y-4">
                   {filteredPoints.map((point) => (
-                    <div key={point.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                    <div
+                      key={point.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                      onClick={() => {
+                        if (point.latitude && point.longitude) {
+                          setSelectedLocation({ lat: point.latitude, lng: point.longitude });
+                          setActiveTab("map"); // muda imediatamente para a aba do mapa
+                        }
+                      }}
+                    >
                       <div className="flex items-center gap-4">
                         <div className="text-2xl">{getTypeIcon(point.type)}</div>
                         <div>
@@ -407,7 +446,11 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                         </div>
                       </div>
                       <Badge className={`${getStatusColor(point.status)} text-white`}>
-                        {point.status === 'active' ? 'Ativo' : point.status === 'maintenance' ? 'Manutenção' : 'Cheio'}
+                        {point.status === 'active'
+                          ? 'Ativo'
+                          : point.status === 'maintenance'
+                            ? 'Manutenção'
+                            : 'Cheio'}
                       </Badge>
                     </div>
                   ))}
@@ -424,6 +467,41 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
               </CardHeader>
 
               <CardContent>
+                {reportError && (
+                  <Alert variant="destructive" className="mb-4 border-red-300 bg-red-50 animate-in slide-in-from-top-2">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <AlertDescription className="text-red-800">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="flex-1">{reportError}</span>
+                        <button
+                          onClick={() => setReportError(null)}
+                          className="flex-shrink-0 hover:bg-red-100 rounded-full p-1 transition-colors"
+                          aria-label="Fechar"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {reportSuccess && (
+                  <Alert className="mb-4 border-green-300 bg-green-50 animate-in slide-in-from-top-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-green-800">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="flex-1">{reportSuccess}</span>
+                        <button
+                          onClick={() => setReportSuccess(null)}
+                          className="flex-shrink-0 hover:bg-green-100 rounded-full p-1 transition-colors"
+                          aria-label="Fechar"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
@@ -435,6 +513,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     if (newReport.image) formData.append("foto", newReport.image);
 
                     try {
+                      setReportError(null);
+                      setReportSuccess(null);
+
                       const res = await fetch(`${import.meta.env.VITE_API_URL}/denuncias`, {
                         method: "POST",
                         body: formData,
@@ -442,13 +523,19 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
                       if (!res.ok) throw new Error("Erro ao enviar denúncia");
 
-                      alert("✅ Denúncia enviada com sucesso!");
+                      setReportSuccess("Denúncia enviada com sucesso!");
                       setNewReport({ title: "", description: "", location: "", type: "", image: null });
                       await carregarDenuncias();
 
+                      // Limpa a mensagem de sucesso após 5 segundos
+                      setTimeout(() => setReportSuccess(null), 5000);
+
                     } catch (err) {
-                      alert("❌ Falha ao enviar denúncia.");
+                      setReportError("Falha ao enviar denúncia. Tente novamente.");
                       console.error(err);
+
+                      // Limpa a mensagem de erro após 5 segundos
+                      setTimeout(() => setReportError(null), 5000);
                     }
                   }}
                   className="space-y-4"
@@ -563,6 +650,41 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
               </CardHeader>
 
               <CardContent>
+                {pointError && (
+                  <Alert variant="destructive" className="mb-4 border-red-300 bg-red-50 animate-in slide-in-from-top-2">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <AlertDescription className="text-red-800">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="flex-1">{pointError}</span>
+                        <button
+                          onClick={() => setPointError(null)}
+                          className="flex-shrink-0 hover:bg-red-100 rounded-full p-1 transition-colors"
+                          aria-label="Fechar"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {pointSuccess && (
+                  <Alert className="mb-4 border-green-300 bg-green-50 animate-in slide-in-from-top-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-green-800">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="flex-1">{pointSuccess}</span>
+                        <button
+                          onClick={() => setPointSuccess(null)}
+                          className="flex-shrink-0 hover:bg-green-100 rounded-full p-1 transition-colors"
+                          aria-label="Fechar"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
@@ -581,12 +703,14 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
                       if (!res.ok) throw new Error("Erro ao Registrar ponto de coleta");
 
-                      alert("✅ Ponto de coleta registrado com sucesso!");
+                      setPointSuccess("Ponto de coleta registrado com sucesso!");
                       setNewRegister({ title: "", description: "", location: "", type: "", image: null });
+                      setTimeout(() => setPointSuccess(null), 5000);
 
                     } catch (err) {
-                      alert("❌ Falha ao registrar ponto de coleta.");
+                      setPointError("Falha ao registrar ponto de coleta.");
                       console.error(err);
+                      setTimeout(() => setPointError(null), 5000);
                     }
                   }}
                   className="space-y-4"
@@ -697,8 +821,11 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="text-[#143D60]">Minhas Denúncias</CardTitle>
-                <CardDescription>Acompanhe o status das suas contribuições</CardDescription>
+                <CardDescription>
+                  Acompanhe o status das suas contribuições
+                </CardDescription>
               </CardHeader>
+
               <CardContent>
                 <div className="space-y-4">
                   {userReports.length === 0 ? (
@@ -706,41 +833,61 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                       Você ainda não fez nenhuma denúncia.
                     </p>
                   ) : (
-                    userReports.map((report) => (
-                      <div
-                        key={report.id_denuncia}
-                        className="p-4 border rounded-lg hover:bg-gray-50"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-medium text-[#143D60]">{report.titulo}</h4>
-                          <Badge className={`${getStatusColor(report.status)} text-white`}>
-                            {report.status === "PENDENTE"
-                              ? "Pendente"
-                              : report.status === "VALIDADA"
-                                ? "Validada"
-                                : report.status === "ENCAMINHADA"
-                                  ? "Encaminhada"
-                                  : "Resolvida"}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-2">{report.descricao}</p>
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span>
-                            {report.localizacao || "Localização não informada"} •{" "}
-                            {new Date(report.data_criacao).toLocaleDateString("pt-BR")}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            <Star className="w-3 h-3" />
-                            <span>{report.validacoes?.length || 0} validações</span>
+                    userReports.map((report) => {
+                      const count = report.validacoes?.length || 0;
+
+                      return (
+                        <div
+                          key={report.id_denuncia}
+                          className="p-4 border rounded-lg hover:bg-gray-50"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <h4 className="font-medium text-[#143D60]">
+                              {report.titulo}
+                            </h4>
+
+                            <Badge
+                              className={`${getStatusColor(report.status)} text-white`}
+                            >
+                              {report.status === "PENDENTE"
+                                ? "Pendente"
+                                : report.status === "VALIDADA"
+                                  ? "Validada"
+                                  : report.status === "ENCAMINHADA"
+                                    ? "Encaminhada"
+                                    : "Resolvida"}
+                            </Badge>
+                          </div>
+
+                          <p className="text-sm text-gray-600 mb-2">
+                            {report.descricao}
+                          </p>
+
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <span>
+                              {report.localizacao || "Localização não informada"} •{" "}
+                              {new Date(report.data_criacao).toLocaleDateString(
+                                "pt-BR"
+                              )}
+                            </span>
+
+                            <div className="flex items-center gap-1">
+                              <Star className="w-3 h-3" />
+
+                              <span>
+                                {count} {count === 1 ? "validação" : "validações"}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
+
 
           {/* Validar Denúncias */}
           <TabsContent value="validate" className="space-y-6">
@@ -750,6 +897,40 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                 <CardDescription>Ajude a validar denúncias de outros cidadãos</CardDescription>
               </CardHeader>
               <CardContent>
+                {validationError && (
+                  <Alert variant="destructive" className="mb-4 border-red-300 bg-red-50 animate-in slide-in-from-top-2">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <AlertDescription className="text-red-800">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="flex-1">{validationError}</span>
+                        <button
+                          onClick={() => setValidationError(null)}
+                          className="flex-shrink-0 hover:bg-red-100 rounded-full p-1 transition-colors"
+                          aria-label="Fechar"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+                {validationSuccess && (
+                  <Alert className="mb-4 border-green-300 bg-green-50 animate-in slide-in-from-top-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <AlertDescription className="text-green-800">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="flex-1">{validationSuccess}</span>
+                        <button
+                          onClick={() => setValidationSuccess(null)}
+                          className="flex-shrink-0 hover:bg-green-100 rounded-full p-1 transition-colors"
+                          aria-label="Fechar"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <div className="space-y-4">
                   {pendingValidations.map((report) => (
                     <div key={report.id_denuncia} className="p-4 border rounded-lg">
@@ -757,7 +938,11 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                       <p className="text-sm text-gray-600 mb-3">{report.descricao}</p>
                       <div className="flex items-center justify-between">
                         <div className="text-xs text-gray-500">
-                          {report.localizacao} • {report.data_criacao} • <span>{report.validacoes?.length ?? 0} validações</span>
+                          {report.localizacao} • {report.data_criacao} •{" "}
+                          <span>
+                            {report.validacoes?.length ?? 0}{" "}
+                            {report.validacoes?.length === 1 ? "validação" : "validações"}
+                          </span>
                         </div>
                         <div className="flex gap-2">
                           <Button

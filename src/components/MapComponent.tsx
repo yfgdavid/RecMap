@@ -5,14 +5,14 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import api from "../services/api";
 
-// Limites e centro do Recife
+
 const recifeCenter: [number, number] = [-8.0476, -34.877];
 const recifeBounds: [[number, number], [number, number]] = [
-  [-8.164, -34.976], // sudoeste: extremo inferior esquerdo
-  [-7.903, -34.841], // nordeste: extremo superior direito
+  [-8.164, -34.976],
+  [-7.903, -34.841],
 ];
 
-// Tipos de dados
+
 interface Denuncia {
   id: number;
   titulo: string;
@@ -20,7 +20,7 @@ interface Denuncia {
   latitude: number;
   longitude: number;
   status: string;
-  foto?: string; // adicionado
+  foto?: string;
 }
 
 interface PontoColeta {
@@ -30,12 +30,17 @@ interface PontoColeta {
   tipo_residuo: string;
   latitude: number;
   longitude: number;
-  foto?: string; // adicionado
+  foto?: string;
 }
 
 interface MapaData {
   denuncias: Denuncia[];
   pontos: PontoColeta[];
+}
+
+
+interface MapComponentProps {
+  selectedLocation?: { lat: number; lng: number } | null;
 }
 
 // Criar ícone colorido
@@ -54,6 +59,20 @@ const createColoredIcon = (color: string) =>
     iconAnchor: [10, 10],
   });
 
+// Centralizar mapa na posição recebida do Dashboard
+
+const FlyToSelected = ({ location }: { location?: { lat: number; lng: number } | null }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (location) {
+      map.flyTo([location.lat, location.lng], 17, { duration: 1.2 });
+    }
+  }, [location]);
+
+  return null;
+};
+
 // Centralizar mapa na posição do usuário
 const FlyToUser = ({ position }: { position: [number, number] }) => {
   const map = useMap();
@@ -63,7 +82,7 @@ const FlyToUser = ({ position }: { position: [number, number] }) => {
   return null;
 };
 
-const MapComponent = () => {
+const MapComponent = ({ selectedLocation }: MapComponentProps) => {
   const [userPosition, setUserPosition] = useState<[number, number] | null>(null);
   const [dadosMapa, setDadosMapa] = useState<MapaData>({ denuncias: [], pontos: [] });
 
@@ -74,7 +93,6 @@ const MapComponent = () => {
         const res = await api.get("/mapa");
         const data = res.data;
 
-        // Mapear denúncias
         const denuncias: Denuncia[] = data
           .filter((item: any) => item.tipo === "denuncia")
           .map((d: any, i: number) => ({
@@ -87,7 +105,6 @@ const MapComponent = () => {
             foto: d.foto || undefined,
           }));
 
-        // Mapear pontos de coleta
         const pontos: PontoColeta[] = data
           .filter((item: any) => item.tipo === "ponto")
           .map((p: any) => ({
@@ -129,12 +146,14 @@ const MapComponent = () => {
       maxBounds={recifeBounds}
       maxBoundsViscosity={1.0}
     >
+      
+      {selectedLocation && <FlyToSelected location={selectedLocation} />}
+
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {/* Marcadores de Denúncias */}
       {dadosMapa.denuncias.map((denuncia) => (
         <Marker
           key={`den-${denuncia.id}`}
@@ -144,11 +163,10 @@ const MapComponent = () => {
           )}
         >
           <Popup>
-            <div className="space-y-2">
-              <strong>{denuncia.titulo}</strong>
-              <p className="text-sm text-gray-600">{denuncia.descricao}</p>
+            <div className="w-56 rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white">
+
               {denuncia.foto && (
-                <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
+                <div className="w-full aspect-[4/3] overflow-hidden">
                   <img
                     src={denuncia.foto}
                     alt={denuncia.titulo}
@@ -156,12 +174,28 @@ const MapComponent = () => {
                   />
                 </div>
               )}
+
+              <div className="p-3 space-y-1">
+                <h3 className="font-semibold text-[#143D60] leading-tight">{denuncia.titulo}</h3>
+                <p className="text-xs text-gray-600 leading-snug">{denuncia.descricao}</p>
+
+                <span
+                  className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md
+                    ${
+                      denuncia.status.toLowerCase() === "encaminhada"
+                        ? "bg-orange-100 text-orange-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                >
+                  {denuncia.status}
+                </span>
+              </div>
+
             </div>
           </Popup>
         </Marker>
       ))}
 
-      {/* Marcadores de Pontos de Coleta */}
       {dadosMapa.pontos.map((ponto) => (
         <Marker
           key={`ponto-${ponto.id}`}
@@ -169,11 +203,10 @@ const MapComponent = () => {
           icon={createColoredIcon("#069240")}
         >
           <Popup>
-            <div className="space-y-2">
-              <strong>{ponto.titulo}</strong>
-              <p className="text-sm text-gray-600">{ponto.tipo_residuo}</p>
+            <div className="w-56 rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white">
+
               {ponto.foto && (
-                <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300">
+                <div className="w-full aspect-[4/3] overflow-hidden">
                   <img
                     src={ponto.foto}
                     alt={ponto.titulo}
@@ -181,12 +214,21 @@ const MapComponent = () => {
                   />
                 </div>
               )}
+
+              <div className="p-3 space-y-1">
+                <h3 className="font-semibold text-[#143D60] leading-tight">{ponto.titulo}</h3>
+                <p className="text-xs text-gray-600 leading-snug">{ponto.descricao}</p>
+
+                <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md bg-green-100 text-green-700">
+                  {ponto.tipo_residuo}
+                </span>
+              </div>
+
             </div>
           </Popup>
         </Marker>
       ))}
 
-      {/* Marcador do usuário */}
       {userPosition && (
         <>
           <FlyToUser position={userPosition} />
