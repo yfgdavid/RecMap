@@ -36,12 +36,14 @@ interface CitizenDashboardProps {
 }
 
 interface CollectionPoint {
-  id: number;
+  id: number | string;
   name: string;
   type: string;
   address: string;
-  distance: string;
+  distance?: string;
   status: 'active' | 'maintenance' | 'full';
+  latitude: number | null;
+  longitude: number | null;
 }
 
 interface Report {
@@ -72,7 +74,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [pointSuccess, setPointSuccess] = useState<string | null>(null);
   const [pointError, setPointError] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [newReport, setNewReport] = useState({
+
     title: '',
     description: '',
     location: '',
@@ -92,56 +96,62 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   // Dados mockados
 
 
+
   const [collectionPoints, setCollectionPoints] = useState<CollectionPoint[]>([]);
 
   useEffect(() => {
-  const fetchMapData = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/mapa`);
-      if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
-      const data = await res.json();
+    const fetchMapData = async () => {
+      try {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/mapa`);
+        if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
+        const data = await res.json();
 
-      // Transforma pontos e denúncias no mesmo formato
-      const allItems: CollectionPoint[] = data
-        .map((item: any) => {
-          if (item.tipo === 'ponto') {
-            return {
-              id: `${item.tipo}-${item.id}`,
-              name: item.titulo,
-              type: 'ponto',
-              address: item.descricao,
-              status: 'active'
-            };
-          } else if (item.tipo === 'denuncia') {
-            return {
-              id: `${item.tipo}-${item.id}`,
-              name: item.titulo,
-              type: 'denuncia',
-              address: item.descricao,
-              status: item.status.toLowerCase()
-            };
-          }
-          return null;
-        })
-        .filter(Boolean) as CollectionPoint[];
+        // Transforma pontos e denúncias no mesmo formato
+        const allItems: CollectionPoint[] = data
+          .map((item: any) => {
+            if (item.tipo === 'ponto') {
+              return {
+                id: `${item.tipo}-${item.id}`,
+                name: item.titulo,
+                type: 'ponto',
+                address: item.descricao,
+                status: 'active',
+                latitude: item.latitude,
+                longitude: item.longitude
+              };
+            } else if (item.tipo === 'denuncia') {
+              return {
+                id: `${item.tipo}-${item.id}`,
+                name: item.titulo,
+                type: 'denuncia',
+                address: item.descricao,
+                status: item.status.toLowerCase(),
+                latitude: item.latitude,
+                longitude: item.longitude
+              };
+            }
+            return null;
+          })
+          .filter(Boolean) as CollectionPoint[];
 
-      // Mantém apenas os 5 mais recentes
-      const latestFive = allItems.slice(-5).reverse();
-      setCollectionPoints(latestFive);
+        // Mantém apenas os 5 mais recentes
+        const latestFive = allItems.slice(-5).reverse();
+        setCollectionPoints(latestFive);
 
-    } catch (error) {
-      console.error('Erro ao buscar dados do mapa:', error);
-    }
-  };
+      } catch (error) {
+        console.error('Erro ao buscar dados do mapa:', error);
+      }
+    };
 
-  fetchMapData();
-  const interval = setInterval(fetchMapData, 10000);
-  return () => clearInterval(interval);
-}, []);
+    fetchMapData();
+    const interval = setInterval(fetchMapData, 10000);
+    return () => clearInterval(interval);
+  }, []);
 
 
 
   const [userReports, setUserReports] = useState<Report[]>([]);
+
 
 
   const carregarDenuncias = async () => {
@@ -190,6 +200,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
     { title: 'Compostagem doméstica', type: 'Vídeo', duration: '17 min', completed: false, url: 'https://www.youtube.com/watch?v=7RV6JfxFvjY' },
     { title: 'O destino do lixo e os desafios do descarte', type: 'Reportagem', duration: '6 min', completed: false, url: 'https://youtu.be/3h2tsLQ_QSg?si=tpkTazORBrwh244A' }
   ]);
+
+
 
 
 
@@ -383,7 +395,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                   <div className="relative w-full">
                     {/* Aspect ratio container para manter proporções */}
 
-                    <MapComponent />
+                    <MapComponent selectedLocation={selectedLocation} />
                     {/* Overlay com legenda permanece igual */}
                     <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#143D60]/90 to-transparent p-4">
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 text-white">
@@ -403,10 +415,18 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                   </div>
                 </div>
 
-
                 <div className="space-y-4">
                   {filteredPoints.map((point) => (
-                    <div key={point.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                    <div
+                      key={point.id}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
+                      onClick={() => {
+                        if (point.latitude && point.longitude) {
+                          setSelectedLocation({ lat: point.latitude, lng: point.longitude });
+                          setActiveTab("map"); // muda imediatamente para a aba do mapa
+                        }
+                      }}
+                    >
                       <div className="flex items-center gap-4">
                         <div className="text-2xl">{getTypeIcon(point.type)}</div>
                         <div>
@@ -416,7 +436,11 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                         </div>
                       </div>
                       <Badge className={`${getStatusColor(point.status)} text-white`}>
-                        {point.status === 'active' ? 'Ativo' : point.status === 'maintenance' ? 'Manutenção' : 'Cheio'}
+                        {point.status === 'active'
+                          ? 'Ativo'
+                          : point.status === 'maintenance'
+                            ? 'Manutenção'
+                            : 'Cheio'}
                       </Badge>
                     </div>
                   ))}
@@ -467,7 +491,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     </AlertDescription>
                   </Alert>
                 )}
-                
+
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
@@ -481,7 +505,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     try {
                       setReportError(null);
                       setReportSuccess(null);
-                      
+
                       const res = await fetch(`${import.meta.env.VITE_API_URL}/denuncias`, {
                         method: "POST",
                         body: formData,
@@ -492,14 +516,14 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                       setReportSuccess("Denúncia enviada com sucesso!");
                       setNewReport({ title: "", description: "", location: "", type: "", image: null });
                       await carregarDenuncias();
-                      
+
                       // Limpa a mensagem de sucesso após 5 segundos
                       setTimeout(() => setReportSuccess(null), 5000);
 
                     } catch (err) {
                       setReportError("Falha ao enviar denúncia. Tente novamente.");
                       console.error(err);
-                      
+
                       // Limpa a mensagem de erro após 5 segundos
                       setTimeout(() => setReportError(null), 5000);
                     }
@@ -650,7 +674,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     </AlertDescription>
                   </Alert>
                 )}
-                
+
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
@@ -787,8 +811,11 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
             <Card>
               <CardHeader>
                 <CardTitle className="text-[#143D60]">Minhas Denúncias</CardTitle>
-                <CardDescription>Acompanhe o status das suas contribuições</CardDescription>
+                <CardDescription>
+                  Acompanhe o status das suas contribuições
+                </CardDescription>
               </CardHeader>
+
               <CardContent>
                 <div className="space-y-4">
                   {userReports.length === 0 ? (
@@ -796,41 +823,61 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                       Você ainda não fez nenhuma denúncia.
                     </p>
                   ) : (
-                    userReports.map((report) => (
-                      <div
-                        key={report.id_denuncia}
-                        className="p-4 border rounded-lg hover:bg-gray-50"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-medium text-[#143D60]">{report.titulo}</h4>
-                          <Badge className={`${getStatusColor(report.status)} text-white`}>
-                            {report.status === "PENDENTE"
-                              ? "Pendente"
-                              : report.status === "VALIDADA"
-                                ? "Validada"
-                                : report.status === "ENCAMINHADA"
-                                  ? "Encaminhada"
-                                  : "Resolvida"}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600 mb-2">{report.descricao}</p>
-                        <div className="flex items-center justify-between text-xs text-gray-500">
-                          <span>
-                            {report.localizacao || "Localização não informada"} •{" "}
-                            {new Date(report.data_criacao).toLocaleDateString("pt-BR")}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            <Star className="w-3 h-3" />
-                            <span>{report.validacoes?.length || 0} validações</span>
+                    userReports.map((report) => {
+                      const count = report.validacoes?.length || 0;
+
+                      return (
+                        <div
+                          key={report.id_denuncia}
+                          className="p-4 border rounded-lg hover:bg-gray-50"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <h4 className="font-medium text-[#143D60]">
+                              {report.titulo}
+                            </h4>
+
+                            <Badge
+                              className={`${getStatusColor(report.status)} text-white`}
+                            >
+                              {report.status === "PENDENTE"
+                                ? "Pendente"
+                                : report.status === "VALIDADA"
+                                  ? "Validada"
+                                  : report.status === "ENCAMINHADA"
+                                    ? "Encaminhada"
+                                    : "Resolvida"}
+                            </Badge>
+                          </div>
+
+                          <p className="text-sm text-gray-600 mb-2">
+                            {report.descricao}
+                          </p>
+
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <span>
+                              {report.localizacao || "Localização não informada"} •{" "}
+                              {new Date(report.data_criacao).toLocaleDateString(
+                                "pt-BR"
+                              )}
+                            </span>
+
+                            <div className="flex items-center gap-1">
+                              <Star className="w-3 h-3" />
+
+                              <span>
+                                {count} {count === 1 ? "validação" : "validações"}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
+
 
           {/* Validar Denúncias */}
           <TabsContent value="validate" className="space-y-6">
@@ -881,7 +928,11 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                       <p className="text-sm text-gray-600 mb-3">{report.descricao}</p>
                       <div className="flex items-center justify-between">
                         <div className="text-xs text-gray-500">
-                          {report.localizacao} • {report.data_criacao} • <span>{report.validacoes?.length ?? 0} validações</span>
+                          {report.localizacao} • {report.data_criacao} •{" "}
+                          <span>
+                            {report.validacoes?.length ?? 0}{" "}
+                            {report.validacoes?.length === 1 ? "validação" : "validações"}
+                          </span>
                         </div>
                         <div className="flex gap-2">
                           <Button
