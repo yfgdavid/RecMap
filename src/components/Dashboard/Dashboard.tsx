@@ -96,6 +96,36 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     );
   };
 
+  const handleDownloadReport = async () => {
+    try {
+      // Faz a requisição para o backend Node
+      const response = await fetch("http://localhost:3333/relatorios/infografico", {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro ao gerar o PDF");
+      }
+
+      // Converte a resposta binária em um blob
+      const blob = await response.blob();
+
+      // Cria um link temporário para baixar o PDF
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "relatorio_recmap.pdf"; // nome do arquivo
+      document.body.appendChild(a);
+      a.click();
+
+      // Remove o link temporário
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Erro ao baixar o relatório:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -417,15 +447,12 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   <CardDescription>Exportar dados de denúncias por período</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-white flex items-center justify-center">
-                    <a
-                      href={`${import.meta.env.VITE_API_URL}/relatorios/infografico`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center w-full"
-                    >
-                      Baixar relatório mensal
-                    </a>
+                   <Button
+                    onClick={handleDownloadReport} // AQUI ESTÁ A CHAMADA DA FUNÇÃO
+                    className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-white flex items-center justify-center"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Baixar relatório mensal
                   </Button>
 
                   <Button variant="outline" className="w-full border-[#A0C878] text-[#143D60]">

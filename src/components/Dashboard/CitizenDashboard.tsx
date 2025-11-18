@@ -312,8 +312,13 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Navegação Responsiva */}
-          <div className="bg-white shadow-sm rounded-lg p-2 overflow-hidden">
-            <TabsList className="inline-flex flex-wrap justify-center w-full gap-2 bg-transparent">
+
+          <div className="shadow-sm rounded-lg p-2 overflow-x-auto overflow-y-hidden" >
+            <TabsList className="
+              flex w-full overflow-x-auto whitespace-nowrap gap-2
+              justify-start
+              lg:overflow-visible lg:justify-center lg:w-auto
+              ">
               <TabsTrigger
                 value="map"
                 className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
