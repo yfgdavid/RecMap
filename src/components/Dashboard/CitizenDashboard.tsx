@@ -115,13 +115,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                 name: item.titulo,
                 type: 'ponto',
                 address: item.descricao,
-<<<<<<< HEAD
-                status: 'active'
-=======
                 status: 'active',
                 latitude: item.latitude,
                 longitude: item.longitude
->>>>>>> ce1b5955815fe288438c230789e6cc6c5db9bbda
               };
             } else if (item.tipo === 'denuncia') {
               return {
@@ -129,13 +125,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                 name: item.titulo,
                 type: 'denuncia',
                 address: item.descricao,
-<<<<<<< HEAD
-                status: item.status.toLowerCase()
-=======
                 status: item.status.toLowerCase(),
                 latitude: item.latitude,
                 longitude: item.longitude
->>>>>>> ce1b5955815fe288438c230789e6cc6c5db9bbda
               };
             }
             return null;
