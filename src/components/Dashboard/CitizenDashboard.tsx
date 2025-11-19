@@ -12,6 +12,7 @@ import { HistoryTimeline } from '../Education/HistoryTimeline';
 import { RecMapLogo } from '../RecMapLogo';
 import { useEffect } from 'react';
 import { LocationInput } from '../LocationInput';
+import { LoadingOverlay } from '../LoadingOverlay';
 
 import {
   MapPin, Camera, Send, History, Award, TrendingUp,
@@ -68,6 +69,8 @@ interface Report {
 export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [activeTab, setActiveTab] = useState('map');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [reportSuccess, setReportSuccess] = useState<string | null>(null);
   const [reportError, setReportError] = useState<string | null>(null);
   const [validationSuccess, setValidationSuccess] = useState<string | null>(null);
@@ -100,8 +103,11 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [collectionPoints, setCollectionPoints] = useState<CollectionPoint[]>([]);
 
   useEffect(() => {
-    const fetchMapData = async () => {
+    const fetchMapData = async (isFirstLoad = false) => {
       try {
+        if (isFirstLoad) {
+          setIsInitialLoading(true);
+        }
         const res = await fetch(`${import.meta.env.VITE_API_URL}/mapa`);
         if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
         const data = await res.json();
@@ -140,11 +146,15 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
       } catch (error) {
         console.error('Erro ao buscar dados do mapa:', error);
+      } finally {
+        if (isFirstLoad) {
+          setIsInitialLoading(false);
+        }
       }
     };
 
-    fetchMapData();
-    const interval = setInterval(fetchMapData, 10000);
+    fetchMapData(true);
+    const interval = setInterval(() => fetchMapData(false), 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -232,6 +242,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
 
   const handleValidateReport = async (reportId: number, vote: 'confirm' | 'reject') => {
+    setIsLoading(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/validacoes`, {
         method: 'POST',
@@ -269,6 +280,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
       console.error('Erro ao validar denúncia:', err);
       setValidationError('Falha ao validar denúncia.');
       setTimeout(() => setValidationError(null), 5000);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -280,6 +293,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {(isLoading || isInitialLoading) && <LoadingOverlay message={isInitialLoading ? "Carregando dados do mapa..." : "Processando..."} />}
       {/* Header */}
       <header className="bg-[#143D60] text-white shadow-lg">
         <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
@@ -531,6 +545,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
                       // Limpa a mensagem de erro após 5 segundos
                       setTimeout(() => setReportError(null), 5000);
+                    } finally {
+                      setIsLoading(false);
                     }
                   }}
                   className="space-y-4"
@@ -683,6 +699,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
+                    setIsLoading(true);
                     const formData = new FormData();
                     formData.append("id_usuario", user.id);
                     formData.append("titulo", newRegister.title);
@@ -706,6 +723,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                       setPointError("Falha ao registrar ponto de coleta.");
                       console.error(err);
                       setTimeout(() => setPointError(null), 5000);
+                    } finally {
+                      setIsLoading(false);
                     }
                   }}
                   className="space-y-4"

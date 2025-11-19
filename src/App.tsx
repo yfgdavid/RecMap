@@ -3,8 +3,8 @@ import { Landing } from './components/Landing';
 import { AuthForm } from './components/Auth/AuthForm';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { CitizenDashboard } from './components/Dashboard/CitizenDashboard';
-// import { LoadingProvider, useLoading } from './hooks/useLoading';
-// import { LoadingOverlay } from './components/LoadingOverlay';
+import { LoadingScreen } from './components/LoadingScreen';
+import { Toaster } from './components/ui/sonner';
 
 export type UserType = 'citizen' | 'government' | null;
 export type AuthMode = 'login' | 'register' | 'forgot' | 'reset';
@@ -21,7 +21,7 @@ function AppContent() {
   const [selectedUserType, setSelectedUserType] = useState<UserType>(null);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [resetToken, setResetToken] = useState<string | null>(null);
-  // const { isLoading, loadingMessage } = useLoading();
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   // Detecta token de reset na URL
   useEffect(() => {
@@ -32,6 +32,15 @@ function AppContent() {
       setAuthMode('reset');
       setSelectedUserType('citizen'); // ou 'government' se quiser permitir
     }
+  }, []);
+
+  // Simula carregamento inicial da aplicação
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const handleUserTypeSelect = (type: UserType) => {
@@ -56,12 +65,17 @@ function AppContent() {
     setAuthMode('login');
   };
 
+  // Mostra tela de loading durante carregamento inicial
+  if (isInitialLoading) {
+    return <LoadingScreen message="Carregando aplicação..." />;
+  }
+
   // Mostra landing se nenhum usuário selecionado e não logado
   if (!currentUser && !selectedUserType) {
     return (
       <>
         <Landing onUserTypeSelect={handleUserTypeSelect} onCreateAccount={handleCreateAccount} />
-        {/* {isLoading && <LoadingOverlay message={loadingMessage} />} */}
+        <Toaster />
       </>
     );
   }
@@ -78,7 +92,7 @@ function AppContent() {
           onBack={handleBackToLanding}
           resetToken={resetToken || undefined}
         />
-        {/* {isLoading && <LoadingOverlay message={loadingMessage} />} */}
+        <Toaster />
       </>
     );
   }
@@ -89,20 +103,20 @@ function AppContent() {
       return (
         <>
           <Dashboard user={currentUser} onLogout={handleLogout} />
-          {/* {isLoading && <LoadingOverlay message={loadingMessage} />} */}
+          <Toaster />
         </>
       );
     } else {
       return (
         <>
           <CitizenDashboard user={currentUser} onLogout={handleLogout} />
-          {/* {isLoading && <LoadingOverlay message={loadingMessage} />} */}
+          <Toaster />
         </>
       );
     }
   }
 
-  return null;
+  return <LoadingScreen message="Carregando..." />;
 }
 
 export default function App() {
@@ -112,4 +126,4 @@ export default function App() {
   //     <AppContent />
   //   </LoadingProvider>
   // );
-}
+  }
