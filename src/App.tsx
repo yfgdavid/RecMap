@@ -32,48 +32,22 @@ function AppContent() {
         
         if (savedUser && savedToken) {
           try {
-            // Valida o token e atualiza os dados do usuário do backend
-            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3333'}/auth/validate`, {
-              headers: {
-                'Authorization': `Bearer ${savedToken}`
-              }
-            });
-
-            if (response.ok) {
-              const data = await response.json();
-              if (data.success && data.user) {
-                // Usa os dados atualizados do backend
-                const userData = data.user;
-                const user: User = {
-                  id: String(userData.id_usuario || userData.id),
-                  name: userData.nome || userData.name,
-                  email: userData.email,
-                  type: userData.tipo || (userData.tipo_usuario === 'GOVERNAMENTAL' ? 'government' : 'citizen')
-                };
-                // Atualiza o localStorage com os dados corretos
-                localStorage.setItem('user', JSON.stringify(user));
-                setCurrentUser(user);
-              } else {
-                // Se não conseguir validar, usa os dados salvos
-                const user: User = JSON.parse(savedUser);
-                setCurrentUser(user);
-              }
-            } else {
-              // Token inválido, limpa e usa dados salvos
-              const user: User = JSON.parse(savedUser);
-              setCurrentUser(user);
+            // Usa os dados salvos e verifica o email para determinar o tipo correto
+            const user: User = JSON.parse(savedUser);
+            const isGovEmail = user.email.toLowerCase().endsWith('.gov.br');
+            
+            // Se o email termina com .gov.br, força o tipo como government
+            if (isGovEmail && user.type !== 'government') {
+              user.type = 'government';
+              localStorage.setItem('user', JSON.stringify(user));
             }
-          } catch (error) {
-            console.error('Erro ao validar sessão:', error);
-            // Em caso de erro, tenta usar os dados salvos
-            try {
-              const user: User = JSON.parse(savedUser);
-              setCurrentUser(user);
-            } catch (parseError) {
-              // Se não conseguir, limpa tudo
-              localStorage.removeItem('user');
-              localStorage.removeItem('token');
-            }
+            
+            setCurrentUser(user);
+          } catch (parseError) {
+            console.error('Erro ao restaurar sessão:', parseError);
+            // Se não conseguir parsear, limpa tudo
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
           }
         }
       } catch (error) {

@@ -149,14 +149,22 @@ export function AuthForm({
           return;
         }
 
-        // Usa o tipo que vem do backend, não o selecionado na tela
-        // Se o backend retornou o tipo, usa ele; senão usa o tipo da tela como fallback
+        // Define o tipo do usuário baseado no email (.gov.br = government)
+        // Prioriza o email sobre o tipo do backend para garantir consistência
         let userTypeFinal: UserType = userType;
-        if (userTipoUsuario) {
-          // Converte GOVERNAMENTAL -> government, CIDADAO -> citizen
-          userTypeFinal = userTipoUsuario === 'GOVERNAMENTAL' || userTipoUsuario === 'government' 
-            ? 'government' 
-            : 'citizen';
+        const isGovEmail = userEmail.toLowerCase().endsWith('.gov.br');
+        
+        // Se o email termina com .gov.br, força o tipo como government
+        if (isGovEmail) {
+          userTypeFinal = 'government';
+        } else {
+          // Para emails não-governamentais, usa o tipo do backend ou da tela
+          if (userTipoUsuario) {
+            // Converte GOVERNAMENTAL -> government, CIDADAO -> citizen
+            userTypeFinal = userTipoUsuario === 'GOVERNAMENTAL' || userTipoUsuario === 'government' 
+              ? 'government' 
+              : 'citizen';
+          }
         }
 
         const user: User = {
