@@ -141,6 +141,7 @@ export function AuthForm({
         const userId = userData.id_usuario || userData.id || userData.usuario_id;
         const userName = userData.nome || userData.name;
         const userEmail = userData.email;
+        const userTipoUsuario = userData.tipo_usuario || userData.tipo;
 
         if (!userId || !userName || !userEmail) {
           console.error('Resposta da API:', data);
@@ -148,16 +149,28 @@ export function AuthForm({
           return;
         }
 
+        // Usa o tipo que vem do backend, não o selecionado na tela
+        // Se o backend retornou o tipo, usa ele; senão usa o tipo da tela como fallback
+        let userTypeFinal: UserType = userType;
+        if (userTipoUsuario) {
+          // Converte GOVERNAMENTAL -> government, CIDADAO -> citizen
+          userTypeFinal = userTipoUsuario === 'GOVERNAMENTAL' || userTipoUsuario === 'government' 
+            ? 'government' 
+            : 'citizen';
+        }
+
         const user: User = {
           id: String(userId),
           name: userName,
           email: userEmail,
-          type: userType
+          type: userTypeFinal
         };
         
         if (data.token) {
           localStorage.setItem('token', data.token);
         }
+        // Salva dados do usuário no localStorage para restaurar sessão após reload
+        localStorage.setItem('user', JSON.stringify(user));
         onLoginSuccess?.(user);
         setSuccess('Login realizado com sucesso!');
       } else {

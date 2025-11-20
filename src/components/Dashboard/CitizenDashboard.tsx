@@ -70,6 +70,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [activeTab, setActiveTab] = useState('map');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Processando...');
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [reportSuccess, setReportSuccess] = useState<string | null>(null);
   const [reportError, setReportError] = useState<string | null>(null);
@@ -242,6 +243,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
 
   const handleValidateReport = async (reportId: number, vote: 'confirm' | 'reject') => {
+    setLoadingMessage('Validando denúncia...');
     setIsLoading(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/validacoes`, {
@@ -293,7 +295,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {(isLoading || isInitialLoading) && <LoadingOverlay message={isInitialLoading ? "Carregando dados do mapa..." : "Processando..."} />}
+      {(isLoading || isInitialLoading) && <LoadingOverlay message={isInitialLoading ? "Carregando dados do mapa..." : loadingMessage} />}
       {/* Header */}
       <header className="bg-[#143D60] text-white shadow-lg">
         <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
@@ -524,6 +526,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     try {
                       setReportError(null);
                       setReportSuccess(null);
+                      setLoadingMessage('Enviando denúncia...');
+                      setIsLoading(true);
 
                       const res = await fetch(`${import.meta.env.VITE_API_URL}/denuncias`, {
                         method: "POST",
@@ -699,6 +703,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
+                    setLoadingMessage('Registrando ponto de coleta...');
                     setIsLoading(true);
                     const formData = new FormData();
                     formData.append("id_usuario", user.id);

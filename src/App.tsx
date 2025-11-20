@@ -23,6 +23,63 @@ function AppContent() {
   const [resetToken, setResetToken] = useState<string | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
 
+  // Restaura sessão do localStorage ao carregar a página
+  useEffect(() => {
+    const restoreSession = async () => {
+      const savedUser = localStorage.getItem('user');
+      const savedToken = localStorage.getItem('token');
+      
+      if (savedUser && savedToken) {
+        try {
+          // Valida o token e atualiza os dados do usuário do backend
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3333'}/auth/validate`, {
+            headers: {
+              'Authorization': `Bearer ${savedToken}`
+            }
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.user) {
+              // Usa os dados atualizados do backend
+              const userData = data.user;
+              const user: User = {
+                id: String(userData.id_usuario || userData.id),
+                name: userData.nome || userData.name,
+                email: userData.email,
+                type: userData.tipo || (userData.tipo_usuario === 'GOVERNAMENTAL' ? 'government' : 'citizen')
+              };
+              // Atualiza o localStorage com os dados corretos
+              localStorage.setItem('user', JSON.stringify(user));
+              setCurrentUser(user);
+            } else {
+              // Se não conseguir validar, usa os dados salvos
+              const user: User = JSON.parse(savedUser);
+              setCurrentUser(user);
+            }
+          } else {
+            // Token inválido, limpa e usa dados salvos
+            const user: User = JSON.parse(savedUser);
+            setCurrentUser(user);
+          }
+        } catch (error) {
+          console.error('Erro ao validar sessão:', error);
+          // Em caso de erro, tenta usar os dados salvos
+          try {
+            const user: User = JSON.parse(savedUser);
+            setCurrentUser(user);
+          } catch (parseError) {
+            // Se não conseguir, limpa tudo
+            localStorage.removeItem('user');
+            localStorage.removeItem('token');
+          }
+        }
+      }
+    };
+
+    restoreSession();
+  }, []);
+
   // Detecta token de reset na URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -58,6 +115,13 @@ function AppContent() {
     setSelectedUserType(null);
     setAuthMode('login');
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  };
+
+  // Função para atualizar o usuário e salvar no localStorage
+  const handleUserUpdate = (user: User) => {
+    setCurrentUser(user);
+    localStorage.setItem('user', JSON.stringify(user));
   };
 
   const handleBackToLanding = () => {
@@ -87,7 +151,7 @@ function AppContent() {
         <AuthForm
           userType={selectedUserType}
           authMode={authMode}
-          onLoginSuccess={setCurrentUser}
+          onLoginSuccess={handleUserUpdate}
           onModeChange={setAuthMode}
           onBack={handleBackToLanding}
           resetToken={resetToken || undefined}

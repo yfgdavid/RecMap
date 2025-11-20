@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
@@ -19,46 +19,126 @@ import {
   AlertTriangle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send
 } from 'lucide-react';
 import { User } from '../../App';
+import api from '../../services/api';
+import { LoadingScreen } from '../LoadingScreen';
 
 interface DashboardProps {
   user: User;
   onLogout: () => void;
 }
 
+interface DashboardData {
+  cards: {
+    totalDenuncias: { valor: number; variacao: string; periodo: string; tendencia: string };
+    denunciasResolvidas: { valor: number; taxa: string; tendencia: string };
+    usuariosAtivos: { valor: number; variacao: string; periodo: string; tendencia: string };
+    pontosColeta: { valor: number; novos: string; tendencia: string };
+  };
+  graficos: {
+    evolucaoMensal: Array<{ mes: string; total: number; resolvidas: number }>;
+    distribuicaoTipos: Array<{ tipo: string; porcentagem: number; quantidade: number }>;
+  };
+  recentes: {
+    denuncias: Array<{
+      id: number;
+      titulo: string;
+      descricao: string;
+      status: string;
+      localizacao: string;
+      data_criacao: string;
+      usuario: string;
+      total_validacoes: number;
+      foto: string | null;
+    }>;
+    pontosColeta: Array<{
+      id: number;
+      titulo: string;
+      descricao: string;
+      localizacao: string;
+      data_criacao: string;
+      usuario: string;
+      foto: string | null;
+    }>;
+  };
+}
+
 export function Dashboard({ user, onLogout }: DashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
-  const [reports, setReports] = useState([
-    { id: 1, titulo: 'Lixão próximo ao Rio Capibaribe', regiao: 'Centro', status: 'pendente', data: '2024-10-07' },
-    { id: 2, titulo: 'Entulho em terreno baldio', regiao: 'Norte', status: 'validada', data: '2024-10-06' },
-    { id: 3, titulo: 'Esgoto a céu aberto', regiao: 'Sul', status: 'encaminhada', data: '2024-10-05' },
-    { id: 4, titulo: 'Acúmulo de lixo na praça', regiao: 'Leste', status: 'pendente', data: '2024-10-04' },
-    { id: 5, titulo: 'Descarte irregular de entulho', regiao: 'Centro', status: 'encaminhada', data: '2024-10-03' }
-  ]);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Dados mockados para os gráficos
-  const reportsData = [
-    { month: 'Jan', denuncias: 45, resolvidas: 32 },
-    { month: 'Fev', denuncias: 52, resolvidas: 41 },
-    { month: 'Mar', denuncias: 38, resolvidas: 35 },
-    { month: 'Abr', denuncias: 61, resolvidas: 45 },
-    { month: 'Mai', denuncias: 55, resolvidas: 48 },
-    { month: 'Jun', denuncias: 67, resolvidas: 52 }
-  ];
+  // Buscar dados do dashboard da API
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const token = localStorage.getItem('token');
+        const id_usuario = user.id;
 
-  const wasteTypesData = [
-    { name: 'Orgânico', value: 40, color: '#A0C878' },
-    { name: 'Reciclável', value: 35, color: '#DDEB9D' },
-    { name: 'Perigoso', value: 15, color: '#8BB668' },
-    { name: 'Eletrônico', value: 10, color: '#143D60' }
-  ];
+        const response = await api.get<{ success: boolean; data?: DashboardData; message?: string }>('/governamental/dashboard', {
+          params: { id_usuario },
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
 
-  const regionData = [
-    { regiao: 'Centro', denuncias: 45, status: 'Alto' },
-    { regiao: 'Norte', denuncias: 32, status: 'Médio' },
-    { regiao: 'Sul', denuncias: 28, status: 'Médio' },
-    { regiao: 'Leste', denuncias: 52, status: 'Alto' },
-    { regiao: 'Oeste', denuncias: 18, status: 'Baixo' }
-  ];
+        if (response.data.success && response.data.data) {
+          setDashboardData(response.data.data);
+        } else {
+          setError(response.data.message || 'Erro ao carregar dados do dashboard');
+        }
+      } catch (err: any) {
+        console.error('Erro ao buscar dados do dashboard:', err);
+        setError(err.response?.data?.message || 'Erro ao conectar com o servidor');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [user.id]);
+
+  // Mapear denúncias recentes para o formato esperado
+  const reports = dashboardData?.recentes.denuncias.map(d => ({
+    id: d.id,
+    titulo: d.titulo,
+    regiao: d.localizacao || 'Não especificado',
+    status: d.status.toLowerCase(),
+    data: new Date(d.data_criacao).toLocaleDateString('pt-BR')
+  })) || [];
+
+  // Mapear dados de evolução mensal para o formato esperado
+  const reportsData = dashboardData?.graficos.evolucaoMensal.map(d => ({
+    month: d.mes,
+    denuncias: d.total,
+    resolvidas: d.resolvidas
+  })) || [];
+
+  // Mapear dados de tipos de resíduos para o formato esperado
+  const wasteTypesData = dashboardData?.graficos.distribuicaoTipos.map((d, index) => {
+    const colors = ['#A0C878', '#DDEB9D', '#8BB668', '#143D60'];
+    return {
+      name: d.tipo,
+      value: d.porcentagem,
+      color: colors[index % colors.length]
+    };
+  }) || [];
+
+  // Dados de região (pode ser calculado baseado nas denúncias reais)
+  const regionData = dashboardData?.recentes.denuncias.reduce((acc, d) => {
+    const regiao = d.localizacao || 'Não especificado';
+    const existing = acc.find(r => r.regiao === regiao);
+    if (existing) {
+      existing.denuncias++;
+    } else {
+      acc.push({ regiao, denuncias: 1, status: 'Médio' });
+    }
+    return acc;
+  }, [] as Array<{ regiao: string; denuncias: number; status: string }>).map(r => ({
+    ...r,
+    status: r.denuncias > 10 ? 'Alto' : r.denuncias > 5 ? 'Médio' : 'Baixo'
+  })) || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -80,20 +160,52 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     }
   };
 
-  const handleForwardReport = (reportId: number) => {
-    setReports(prevReports =>
-      prevReports.map(report =>
-        report.id === reportId ? { ...report, status: 'encaminhada' } : report
-      )
-    );
+  const handleForwardReport = async (reportId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await api.patch<{ success: boolean; message?: string }>(`/governamental/denuncias/${reportId}/status`, 
+        { status: 'ENCAMINHADA' },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+
+      if (response.data.success) {
+        // Recarregar dados do dashboard
+        const dashboardResponse = await api.get<{ success: boolean; data?: DashboardData; message?: string }>('/governamental/dashboard', {
+          params: { id_usuario: user.id },
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        if (dashboardResponse.data.success && dashboardResponse.data.data) {
+          setDashboardData(dashboardResponse.data.data);
+        }
+      }
+    } catch (err: any) {
+      console.error('Erro ao encaminhar denúncia:', err);
+      alert(err.response?.data?.message || 'Erro ao encaminhar denúncia');
+    }
   };
 
-  const handleResolveReport = (reportId: number) => {
-    setReports(prevReports =>
-      prevReports.map(report =>
-        report.id === reportId ? { ...report, status: 'resolvida' } : report
-      )
-    );
+  const handleResolveReport = async (reportId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await api.patch<{ success: boolean; message?: string }>(`/governamental/denuncias/${reportId}/status`, 
+        { status: 'RESOLVIDA' },
+        { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+      );
+
+      if (response.data.success) {
+        // Recarregar dados do dashboard
+        const dashboardResponse = await api.get<{ success: boolean; data?: DashboardData; message?: string }>('/governamental/dashboard', {
+          params: { id_usuario: user.id },
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        if (dashboardResponse.data.success && dashboardResponse.data.data) {
+          setDashboardData(dashboardResponse.data.data);
+        }
+      }
+    } catch (err: any) {
+      console.error('Erro ao resolver denúncia:', err);
+      alert(err.response?.data?.message || 'Erro ao marcar denúncia como resolvida');
+    }
   };
 
   const handleDownloadReport = async () => {
@@ -125,6 +237,120 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       console.error("Erro ao baixar o relatório:", error);
     }
   };
+
+  if (loading) {
+    return <LoadingScreen message="Carregando dashboard..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Header com botão de sair */}
+        <header className="bg-[#143D60] text-white shadow-lg">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <RecMapLogo size="xl" variant="dark" />
+                <div>
+                  <p className="text-[#A0C878]">Bem-vindo, {user.name}</p>
+                </div>
+              </div>
+              <Button
+                onClick={onLogout}
+                className="bg-[#143D60] text-white hover:bg-[#0F2F4A] border-[#143D60]"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        {/* Conteúdo de erro */}
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[calc(100vh-80px)]">
+          <Card className="max-w-md w-full">
+            <CardHeader>
+              <CardTitle className="text-red-600">Erro ao carregar dados</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-gray-600">{error}</p>
+              <div className="flex flex-col gap-2">
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  className="w-full bg-[#143D60] hover:bg-[#0F2F4A] text-white"
+                >
+                  Tentar novamente
+                </Button>
+                <Button 
+                  onClick={onLogout}
+                  variant="outline"
+                  className="w-full border-[#143D60] text-[#143D60] hover:bg-gray-100"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair e voltar ao login
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        {/* Header com botão de sair */}
+        <header className="bg-[#143D60] text-white shadow-lg">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <RecMapLogo size="xl" variant="dark" />
+                <div>
+                  <p className="text-[#A0C878]">Bem-vindo, {user.name}</p>
+                </div>
+              </div>
+              <Button
+                onClick={onLogout}
+                className="bg-[#143D60] text-white hover:bg-[#0F2F4A] border-[#143D60]"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        {/* Conteúdo sem dados */}
+        <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[calc(100vh-80px)]">
+          <Card className="max-w-md w-full">
+            <CardHeader>
+              <CardTitle>Nenhum dado disponível</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-gray-600">Não há dados para exibir no momento.</p>
+              <div className="flex flex-col gap-2">
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  className="w-full bg-[#143D60] hover:bg-[#0F2F4A] text-white"
+                >
+                  Recarregar página
+                </Button>
+                <Button 
+                  onClick={onLogout}
+                  variant="outline"
+                  className="w-full border-[#143D60] text-[#143D60] hover:bg-gray-100"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sair e voltar ao login
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -175,8 +401,10 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Total de Denúncias</p>
-                      <p className="text-2xl font-bold text-[#143D60]">318</p>
-                      <p className="text-xs text-green-600">+12% este mês</p>
+                      <p className="text-2xl font-bold text-[#143D60]">{dashboardData.cards.totalDenuncias.valor.toLocaleString('pt-BR')}</p>
+                      <p className={`text-xs ${dashboardData.cards.totalDenuncias.tendencia === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {dashboardData.cards.totalDenuncias.variacao} {dashboardData.cards.totalDenuncias.periodo}
+                      </p>
                     </div>
                     <AlertTriangle className="w-8 h-8 text-[#A0C878]" />
                   </div>
@@ -188,8 +416,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Denúncias Resolvidas</p>
-                      <p className="text-2xl font-bold text-[#143D60]">253</p>
-                      <p className="text-xs text-green-600">79.6% de resolução</p>
+                      <p className="text-2xl font-bold text-[#143D60]">{dashboardData.cards.denunciasResolvidas.valor.toLocaleString('pt-BR')}</p>
+                      <p className="text-xs text-green-600">{dashboardData.cards.denunciasResolvidas.taxa}</p>
                     </div>
                     <CheckCircle className="w-8 h-8 text-[#A0C878]" />
                   </div>
@@ -201,8 +429,10 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Usuários Ativos</p>
-                      <p className="text-2xl font-bold text-[#143D60]">1,247</p>
-                      <p className="text-xs text-green-600">+8% este mês</p>
+                      <p className="text-2xl font-bold text-[#143D60]">{dashboardData.cards.usuariosAtivos.valor.toLocaleString('pt-BR')}</p>
+                      <p className={`text-xs ${dashboardData.cards.usuariosAtivos.tendencia === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {dashboardData.cards.usuariosAtivos.variacao} {dashboardData.cards.usuariosAtivos.periodo}
+                      </p>
                     </div>
                     <Users className="w-8 h-8 text-[#143D60]" />
                   </div>
@@ -214,8 +444,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Pontos de Coleta</p>
-                      <p className="text-2xl font-bold text-[#143D60]">89</p>
-                      <p className="text-xs text-blue-600">+3 novos pontos</p>
+                      <p className="text-2xl font-bold text-[#143D60]">{dashboardData.cards.pontosColeta.valor.toLocaleString('pt-BR')}</p>
+                      <p className="text-xs text-blue-600">{dashboardData.cards.pontosColeta.novos}</p>
                     </div>
                     <MapPin className="w-8 h-8 text-[#A0C878]" />
                   </div>
