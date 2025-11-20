@@ -328,7 +328,7 @@ export function AuthForm({
                   <Input
                     id="email"
                     type="email"
-                    placeholder={isGovernment ? "seu.email@prefeitura.gov.br" : "seu.email@exemplo.com"}
+                    placeholder={isGovernment ? "seu.email@dominio.gov.br" : "seu.email@exemplo.com"}
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     required
