@@ -12,12 +12,13 @@ import { HistoryTimeline } from '../Education/HistoryTimeline';
 import { RecMapLogo } from '../RecMapLogo';
 import { useEffect } from 'react';
 import { LocationInput } from '../LocationInput';
+import { LoadingOverlay } from '../LoadingOverlay';
 
 import {
   MapPin, Camera, Send, History, Award, TrendingUp,
   BookOpen, Recycle, AlertTriangle, CheckCircle,
   Clock, Star, Leaf, LogOut, Filter, Plus,
-  Link, CheckCircle2, AlertCircle, X
+  Link, CheckCircle2, AlertCircle, X, Loader2
 } from 'lucide-react';
 
 import { User } from '../../App';
@@ -66,12 +67,16 @@ interface Report {
 export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [activeTab, setActiveTab] = useState('map');
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Processando...');
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [reportSuccess, setReportSuccess] = useState<string | null>(null);
   const [reportError, setReportError] = useState<string | null>(null);
   const [validationSuccess, setValidationSuccess] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [pointSuccess, setPointSuccess] = useState<string | null>(null);
   const [pointError, setPointError] = useState<string | null>(null);
+  const [validatingReportId, setValidatingReportId] = useState<number | null>(null);
   const [newReport, setNewReport] = useState({
     title: '',
     description: '',
@@ -95,49 +100,56 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [collectionPoints, setCollectionPoints] = useState<CollectionPoint[]>([]);
 
   useEffect(() => {
-  const fetchMapData = async () => {
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/mapa`);
-      if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
-      const data = await res.json();
+    const fetchMapData = async (isFirstLoad = false) => {
+      try {
+        if (isFirstLoad) {
+          setIsInitialLoading(true);
+        }
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/mapa`);
+        if (!res.ok) throw new Error('Erro ao buscar dados do mapa');
+        const data = await res.json();
 
-      // Transforma pontos e denúncias no mesmo formato
-      const allItems: CollectionPoint[] = data
-        .map((item: any) => {
-          if (item.tipo === 'ponto') {
-            return {
-              id: `${item.tipo}-${item.id}`,
-              name: item.titulo,
-              type: 'ponto',
-              address: item.descricao,
-              status: 'active'
-            };
-          } else if (item.tipo === 'denuncia') {
-            return {
-              id: `${item.tipo}-${item.id}`,
-              name: item.titulo,
-              type: 'denuncia',
-              address: item.descricao,
-              status: item.status.toLowerCase()
-            };
-          }
-          return null;
-        })
-        .filter(Boolean) as CollectionPoint[];
+        // Transforma pontos e denúncias no mesmo formato
+        const allItems: CollectionPoint[] = data
+          .map((item: any) => {
+            if (item.tipo === 'ponto') {
+              return {
+                id: `${item.tipo}-${item.id}`,
+                name: item.titulo,
+                type: 'ponto',
+                address: item.descricao,
+                status: 'active'
+              };
+            } else if (item.tipo === 'denuncia') {
+              return {
+                id: `${item.tipo}-${item.id}`,
+                name: item.titulo,
+                type: 'denuncia',
+                address: item.descricao,
+                status: item.status.toLowerCase()
+              };
+            }
+            return null;
+          })
+          .filter(Boolean) as CollectionPoint[];
 
-      // Mantém apenas os 5 mais recentes
-      const latestFive = allItems.slice(-5).reverse();
-      setCollectionPoints(latestFive);
+        // Mantém apenas os 5 mais recentes
+        const latestFive = allItems.slice(-5).reverse();
+        setCollectionPoints(latestFive);
 
-    } catch (error) {
-      console.error('Erro ao buscar dados do mapa:', error);
-    }
-  };
+      } catch (error) {
+        console.error('Erro ao buscar dados do mapa:', error);
+      } finally {
+        if (isFirstLoad) {
+          setIsInitialLoading(false);
+        }
+      }
+    };
 
-  fetchMapData();
-  const interval = setInterval(fetchMapData, 10000);
-  return () => clearInterval(interval);
-}, []);
+    fetchMapData(true);
+    const interval = setInterval(() => fetchMapData(false), 10000);
+    return () => clearInterval(interval);
+  }, []);
 
 
 
@@ -268,6 +280,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {isInitialLoading && <LoadingOverlay message="Carregando dados do mapa..." />}
+      {(isLoading && !validatingReportId) && <LoadingOverlay message={loadingMessage} />}
       {/* Header */}
       <header className="bg-[#143D60] text-white shadow-lg">
         <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
@@ -481,6 +495,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     try {
                       setReportError(null);
                       setReportSuccess(null);
+                      setLoadingMessage('Enviando denúncia...');
+                      setIsLoading(true);
                       
                       const res = await fetch(`${import.meta.env.VITE_API_URL}/denuncias`, {
                         method: "POST",
@@ -502,6 +518,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                       
                       // Limpa a mensagem de erro após 5 segundos
                       setTimeout(() => setReportError(null), 5000);
+                    } finally {
+                      setIsLoading(false);
                     }
                   }}
                   className="space-y-4"
@@ -662,6 +680,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     if (newRegister.image) formData.append("foto", newRegister.image);
 
                     try {
+                      setLoadingMessage('Registrando ponto de coleta...');
+                      setIsLoading(true);
+                      
                       const res = await fetch(`${import.meta.env.VITE_API_URL}/pontos`, {
                         method: "POST",
                         body: formData,
@@ -677,6 +698,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                       setPointError("Falha ao registrar ponto de coleta.");
                       console.error(err);
                       setTimeout(() => setPointError(null), 5000);
+                    } finally {
+                      setIsLoading(false);
                     }
                   }}
                   className="space-y-4"

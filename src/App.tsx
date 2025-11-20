@@ -3,6 +3,7 @@ import { Landing } from './components/Landing';
 import { AuthForm } from './components/Auth/AuthForm';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { CitizenDashboard } from './components/Dashboard/CitizenDashboard';
+import { LoadingScreen } from './components/LoadingScreen';
 // import { LoadingProvider, useLoading } from './hooks/useLoading';
 // import { LoadingOverlay } from './components/LoadingOverlay';
 
@@ -21,7 +22,18 @@ function AppContent() {
   const [selectedUserType, setSelectedUserType] = useState<UserType>(null);
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [resetToken, setResetToken] = useState<string | null>(null);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   // const { isLoading, loadingMessage } = useLoading();
+
+  // Tela de loading inicial
+  useEffect(() => {
+    // Simula um pequeno delay para melhorar UX do loading
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Detecta token de reset na URL
   useEffect(() => {
@@ -55,6 +67,11 @@ function AppContent() {
     setSelectedUserType(null);
     setAuthMode('login');
   };
+
+  // Mostra tela de loading inicial
+  if (isInitialLoading) {
+    return <LoadingScreen message="Carregando aplicação..." />;
+  }
 
   // Mostra landing se nenhum usuário selecionado e não logado
   if (!currentUser && !selectedUserType) {
