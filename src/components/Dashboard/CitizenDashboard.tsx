@@ -18,7 +18,7 @@ import {
   MapPin, Camera, Send, History, Award, TrendingUp,
   BookOpen, Recycle, AlertTriangle, CheckCircle,
   Clock, Star, Leaf, LogOut, Filter, Plus,
-  Link, CheckCircle2, AlertCircle, X
+  Link, CheckCircle2, AlertCircle, X, Loader2
 } from 'lucide-react';
 
 import { User } from '../../App';
@@ -76,6 +76,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [reportError, setReportError] = useState<string | null>(null);
   const [validationSuccess, setValidationSuccess] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [validatingReportId, setValidatingReportId] = useState<number | null>(null);
   const [pointSuccess, setPointSuccess] = useState<string | null>(null);
   const [pointError, setPointError] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -243,8 +244,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
 
   const handleValidateReport = async (reportId: number, vote: 'confirm' | 'reject') => {
-    setLoadingMessage('Validando denúncia...');
-    setIsLoading(true);
+    setValidatingReportId(reportId);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/validacoes`, {
         method: 'POST',
@@ -283,7 +283,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
       setValidationError('Falha ao validar denúncia.');
       setTimeout(() => setValidationError(null), 5000);
     } finally {
-      setIsLoading(false);
+      setValidatingReportId(null);
     }
   };
 
@@ -295,7 +295,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {(isLoading || isInitialLoading) && <LoadingOverlay message={isInitialLoading ? "Carregando dados do mapa..." : loadingMessage} />}
+      {isInitialLoading && <LoadingOverlay message="Carregando dados do mapa..." />}
+      {(isLoading && !validatingReportId) && <LoadingOverlay message={loadingMessage} />}
       {/* Header */}
       <header className="bg-[#143D60] text-white shadow-lg">
         <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
@@ -951,38 +952,49 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                   </Alert>
                 )}
                 <div className="space-y-4">
-                  {pendingValidations.map((report) => (
-                    <div key={report.id_denuncia} className="p-4 border rounded-lg">
-                      <h4 className="font-medium text-[#143D60] mb-2">{report.titulo}</h4>
-                      <p className="text-sm text-gray-600 mb-3">{report.descricao}</p>
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs text-gray-500">
-                          {report.localizacao} • {report.data_criacao} •{" "}
-                          <span>
-                            {report.validacoes?.length ?? 0}{" "}
-                            {report.validacoes?.length === 1 ? "validação" : "validações"}
-                          </span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleValidateReport(report.id_denuncia, 'reject')}
-                            className="border-red-500 text-red-500 hover:bg-red-50"
-                          >
-                            Contestar
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleValidateReport(report.id_denuncia, 'confirm')}
-                            className="bg-[#A0C878] hover:bg-[#8BB668] text-white"
-                          >
-                            Confirmar
-                          </Button>
+                  {pendingValidations.map((report) => {
+                    const isValidating = validatingReportId === report.id_denuncia;
+                    return (
+                      <div key={report.id_denuncia} className={`p-4 border rounded-lg transition-opacity ${isValidating ? 'opacity-60' : ''}`}>
+                        <h4 className="font-medium text-[#143D60] mb-2">{report.titulo}</h4>
+                        <p className="text-sm text-gray-600 mb-3">{report.descricao}</p>
+                        <div className="flex items-center justify-between">
+                          <div className="text-xs text-gray-500">
+                            {report.localizacao} • {report.data_criacao} •{" "}
+                            <span>
+                              {report.validacoes?.length ?? 0}{" "}
+                              {report.validacoes?.length === 1 ? "validação" : "validações"}
+                            </span>
+                          </div>
+                          <div className="flex gap-2 items-center">
+                            {isValidating && (
+                              <div className="flex items-center gap-2 text-sm text-[#143D60] mr-2">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span>Validando...</span>
+                              </div>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleValidateReport(report.id_denuncia, 'reject')}
+                              disabled={isValidating}
+                              className="border-red-500 text-red-500 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Contestar
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleValidateReport(report.id_denuncia, 'confirm')}
+                              disabled={isValidating}
+                              className="bg-[#A0C878] hover:bg-[#8BB668] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Confirmar
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
