@@ -26,60 +26,59 @@ function AppContent() {
   // Restaura sessão do localStorage ao carregar a página
   useEffect(() => {
     const restoreSession = async () => {
-      const savedUser = localStorage.getItem('user');
-      const savedToken = localStorage.getItem('token');
-      
-      if (savedUser && savedToken) {
-        try {
-          // Valida o token e atualiza os dados do usuário do backend
-          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3333'}/auth/validate`, {
-            headers: {
-              'Authorization': `Bearer ${savedToken}`
-            }
-          });
+      try {
+        const savedUser = localStorage.getItem('user');
+        const savedToken = localStorage.getItem('token');
+        
+        if (savedUser && savedToken) {
+          try {
+            // Valida o token e atualiza os dados do usuário do backend
+            const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3333'}/auth/validate`, {
+              headers: {
+                'Authorization': `Bearer ${savedToken}`
+              }
+            });
 
-          if (response.ok) {
-            const data = await response.json();
-            if (data.success && data.user) {
-              // Usa os dados atualizados do backend
-              const userData = data.user;
-              const user: User = {
-                id: String(userData.id_usuario || userData.id),
-                name: userData.nome || userData.name,
-                email: userData.email,
-                type: userData.tipo || (userData.tipo_usuario === 'GOVERNAMENTAL' ? 'government' : 'citizen')
-              };
-              // Atualiza o localStorage com os dados corretos
-              localStorage.setItem('user', JSON.stringify(user));
-              setCurrentUser(user);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success && data.user) {
+                // Usa os dados atualizados do backend
+                const userData = data.user;
+                const user: User = {
+                  id: String(userData.id_usuario || userData.id),
+                  name: userData.nome || userData.name,
+                  email: userData.email,
+                  type: userData.tipo || (userData.tipo_usuario === 'GOVERNAMENTAL' ? 'government' : 'citizen')
+                };
+                // Atualiza o localStorage com os dados corretos
+                localStorage.setItem('user', JSON.stringify(user));
+                setCurrentUser(user);
+              } else {
+                // Se não conseguir validar, usa os dados salvos
+                const user: User = JSON.parse(savedUser);
+                setCurrentUser(user);
+              }
             } else {
-              // Se não conseguir validar, usa os dados salvos
+              // Token inválido, limpa e usa dados salvos
               const user: User = JSON.parse(savedUser);
               setCurrentUser(user);
             }
-          } else {
-            // Token inválido, limpa e usa dados salvos
-            const user: User = JSON.parse(savedUser);
-            setCurrentUser(user);
-          }
-        } catch (error) {
-          console.error('Erro ao validar sessão:', error);
-          // Em caso de erro, tenta usar os dados salvos
-          try {
-            const user: User = JSON.parse(savedUser);
-            setCurrentUser(user);
-          } catch (parseError) {
-            // Se não conseguir, limpa tudo
-            localStorage.removeItem('user');
-            localStorage.removeItem('token');
+          } catch (error) {
+            console.error('Erro ao validar sessão:', error);
+            // Em caso de erro, tenta usar os dados salvos
+            try {
+              const user: User = JSON.parse(savedUser);
+              setCurrentUser(user);
+            } catch (parseError) {
+              // Se não conseguir, limpa tudo
+              localStorage.removeItem('user');
+              localStorage.removeItem('token');
+            }
           }
         }
+      } catch (error) {
+        console.error('Erro ao restaurar sessão:', error);
       }
-
-      // Finaliza o loading após a verificação
-      setTimeout(() => {
-        setIsInitialLoading(false);
-      }, 800);
     };
 
     restoreSession();
@@ -94,6 +93,15 @@ function AppContent() {
       setAuthMode('reset');
       setSelectedUserType('citizen'); // ou 'government' se quiser permitir
     }
+  }, []);
+
+  // Tela de loading inicial ao recarregar a página
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsInitialLoading(false);
+    }, 800);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const handleUserTypeSelect = (type: UserType) => {
@@ -125,9 +133,41 @@ function AppContent() {
     setAuthMode('login');
   };
 
-  // Mostra tela de loading inicial
+  // Mostra tela de loading durante carregamento inicial
   if (isInitialLoading) {
-    return <LoadingScreen message="Carregando aplicação..." />;
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'linear-gradient(to bottom right, #DDEB9D, white, #A0C878)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            border: '4px solid #f3f3f3',
+            borderTop: '4px solid #143D60',
+            borderRadius: '50%',
+            width: '48px',
+            height: '48px',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 16px'
+          }}></div>
+          <p style={{ color: '#143D60', fontSize: '18px', fontWeight: 500 }}>Carregando aplicação...</p>
+        </div>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
   }
 
   // Mostra landing se nenhum usuário selecionado e não logado
@@ -176,9 +216,14 @@ function AppContent() {
     }
   }
 
-  return null;
+  return <LoadingScreen message="Carregando..." />;
 }
 
 export default function App() {
   return <AppContent />;
-}
+  // return (
+  //   <LoadingProvider>
+  //     <AppContent />
+  //   </LoadingProvider>
+  // );
+  }

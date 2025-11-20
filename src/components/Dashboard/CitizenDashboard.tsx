@@ -80,7 +80,6 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [pointSuccess, setPointSuccess] = useState<string | null>(null);
   const [pointError, setPointError] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [validatingReportId, setValidatingReportId] = useState<number | null>(null);
   const [newReport, setNewReport] = useState({
 
     title: '',
