@@ -75,6 +75,11 @@ function AppContent() {
           }
         }
       }
+
+      // Finaliza o loading após a verificação
+      setTimeout(() => {
+        setIsInitialLoading(false);
+      }, 800);
     };
 
     restoreSession();
@@ -89,15 +94,6 @@ function AppContent() {
       setAuthMode('reset');
       setSelectedUserType('citizen'); // ou 'government' se quiser permitir
     }
-  }, []);
-
-  // Simula carregamento inicial da aplicação
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoading(false);
-    }, 1500);
-
-    return () => clearTimeout(timer);
   }, []);
 
   const handleUserTypeSelect = (type: UserType) => {
@@ -129,7 +125,7 @@ function AppContent() {
     setAuthMode('login');
   };
 
-  // Mostra tela de loading durante carregamento inicial
+  // Mostra tela de loading inicial
   if (isInitialLoading) {
     return <LoadingScreen message="Carregando aplicação..." />;
   }
@@ -180,14 +176,9 @@ function AppContent() {
     }
   }
 
-  return <LoadingScreen message="Carregando..." />;
+  return null;
 }
 
 export default function App() {
   return <AppContent />;
-  // return (
-  //   <LoadingProvider>
-  //     <AppContent />
-  //   </LoadingProvider>
-  // );
-  }
+}

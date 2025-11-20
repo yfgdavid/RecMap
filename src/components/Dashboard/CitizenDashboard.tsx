@@ -18,7 +18,7 @@ import {
   MapPin, Camera, Send, History, Award, TrendingUp,
   BookOpen, Recycle, AlertTriangle, CheckCircle,
   Clock, Star, Leaf, LogOut, Filter, Plus,
-  Link, CheckCircle2, AlertCircle, X
+  Link, CheckCircle2, AlertCircle, X, Loader2
 } from 'lucide-react';
 
 import { User } from '../../App';
@@ -79,6 +79,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [pointSuccess, setPointSuccess] = useState<string | null>(null);
   const [pointError, setPointError] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [validatingReportId, setValidatingReportId] = useState<number | null>(null);
   const [newReport, setNewReport] = useState({
 
     title: '',
@@ -295,7 +296,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {(isLoading || isInitialLoading) && <LoadingOverlay message={isInitialLoading ? "Carregando dados do mapa..." : loadingMessage} />}
+      {isInitialLoading && <LoadingOverlay message="Carregando dados do mapa..." />}
+      {(isLoading && !validatingReportId) && <LoadingOverlay message={loadingMessage} />}
       {/* Header */}
       <header className="bg-[#143D60] text-white shadow-lg">
         <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
@@ -528,7 +530,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                       setReportSuccess(null);
                       setLoadingMessage('Enviando denúncia...');
                       setIsLoading(true);
-
+                      
                       const res = await fetch(`${import.meta.env.VITE_API_URL}/denuncias`, {
                         method: "POST",
                         body: formData,
@@ -713,6 +715,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     if (newRegister.image) formData.append("foto", newRegister.image);
 
                     try {
+                      setLoadingMessage('Registrando ponto de coleta...');
+                      setIsLoading(true);
+                      
                       const res = await fetch(`${import.meta.env.VITE_API_URL}/pontos`, {
                         method: "POST",
                         body: formData,
