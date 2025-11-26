@@ -154,16 +154,23 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {dadosMapa.denuncias.map((denuncia) => (
-        <Marker
-          key={`den-${denuncia.id}`}
-          position={[denuncia.latitude, denuncia.longitude]}
-          icon={createColoredIcon(
-            denuncia.status.toLowerCase() === "encaminhada" ? "#FFA500" : "#FF2C2C"
-          )}
-        >
+      {dadosMapa.denuncias.map((denuncia) => {
+        // Define a cor do marcador baseado no status
+        const getMarkerColor = (status: string) => {
+          const statusLower = status.toLowerCase();
+          if (statusLower === "resolvida") return "#2563EB"; // Azul (resolvido/concluído)
+          if (statusLower === "encaminhada") return "#FFA500"; // Laranja
+          return "#FF2C2C"; // Vermelho (padrão para pendente/validada)
+        };
+
+        return (
+          <Marker
+            key={`den-${denuncia.id}`}
+            position={[denuncia.latitude, denuncia.longitude]}
+            icon={createColoredIcon(getMarkerColor(denuncia.status))}
+          >
           <Popup>
-            <div className="w-56 rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white">
+            <div className="w-44 rounded-lg overflow-hidden shadow-lg border border-gray-200 bg-white">
 
               {denuncia.foto && (
                 <div className="w-full aspect-[4/3] overflow-hidden">
@@ -175,14 +182,16 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
                 </div>
               )}
 
-              <div className="p-3 space-y-1">
-                <h3 className="font-semibold text-[#143D60] leading-tight">{denuncia.titulo}</h3>
-                <p className="text-xs text-gray-600 leading-snug">{denuncia.descricao}</p>
+              <div className="p-2 space-y-1">
+                <h3 className="font-semibold text-[#143D60] text-sm leading-tight">{denuncia.titulo}</h3>
+                <p className="text-xs text-gray-600 leading-snug line-clamp-2">{denuncia.descricao}</p>
 
                 <span
                   className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md
                     ${
-                      denuncia.status.toLowerCase() === "encaminhada"
+                      denuncia.status.toLowerCase() === "resolvida"
+                        ? "bg-blue-100 text-blue-700"
+                        : denuncia.status.toLowerCase() === "encaminhada"
                         ? "bg-orange-100 text-orange-700"
                         : "bg-red-100 text-red-700"
                     }`}
@@ -194,7 +203,8 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
             </div>
           </Popup>
         </Marker>
-      ))}
+        );
+      })}
 
       {dadosMapa.pontos.map((ponto) => (
         <Marker
@@ -203,7 +213,7 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
           icon={createColoredIcon("#069240")}
         >
           <Popup>
-            <div className="w-56 rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white">
+            <div className="w-44 rounded-lg overflow-hidden shadow-lg border border-gray-200 bg-white">
 
               {ponto.foto && (
                 <div className="w-full aspect-[4/3] overflow-hidden">
@@ -215,9 +225,9 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
                 </div>
               )}
 
-              <div className="p-3 space-y-1">
-                <h3 className="font-semibold text-[#143D60] leading-tight">{ponto.titulo}</h3>
-                <p className="text-xs text-gray-600 leading-snug">{ponto.descricao}</p>
+              <div className="p-2 space-y-1">
+                <h3 className="font-semibold text-[#143D60] text-sm leading-tight">{ponto.titulo}</h3>
+                <p className="text-xs text-gray-600 leading-snug line-clamp-2">{ponto.descricao}</p>
 
                 <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md bg-green-100 text-green-700">
                   {ponto.tipo_residuo}
