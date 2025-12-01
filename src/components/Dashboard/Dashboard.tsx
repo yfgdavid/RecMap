@@ -211,24 +211,34 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-[#143D60] text-white shadow-lg">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
+
+          {/* Logo + Saudação */}
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+            <div className="flex-shrink-0 flex items-center justify-center">
               <RecMapLogo size="xl" variant="dark" />
-              <div>
-                <p className="text-[#A0C878]">Bem-vindo, {user.name}</p>
-              </div>
             </div>
-            <Button
-              onClick={onLogout}
-              className="bg-[#143D60] text-white hover:bg-[#0F2F4A] border-[#143D60]"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Sair
-            </Button>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2 min-w-0">
+              <span className="text-[#DDEB9D] text-xs sm:text-base truncate">
+                Bem-vindo, {user.name.split(' ')[0]}!
+              </span>
+            </div>
           </div>
+
+          {/* Botão Sair */}
+          <Button
+            onClick={onLogout}
+            variant="outline"
+            size="sm"
+            className="flex-shrink-0 bg-transparent border-[#A0C878] text-[#DDEB9D] hover:bg-[#A0C878] hover:text-white transition-colors px-2 sm:px-4 h-8 sm:h-9"
+          >
+            <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Sair</span>
+          </Button>
+
         </div>
       </header>
+
 
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -449,59 +459,59 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 ) : (
                   <div className="space-y-4">
                     {reports.map((report) => {
-                    const StatusIcon = getStatusIcon(report.status);
-                    const canTakeAction = report.status !== 'resolvida';
+                      const StatusIcon = getStatusIcon(report.status);
+                      const canTakeAction = report.status !== 'resolvida';
 
-                    return (
-                      <div key={report.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 gap-3">
-                        <div className="flex items-center gap-4 flex-1 min-w-0">
-                          <StatusIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-[#143D60]">{report.titulo}</h4>
-                            <p className="text-sm text-gray-600">{report.regiao} • {report.data}</p>
+                      return (
+                        <div key={report.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 gap-3">
+                          <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <StatusIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-medium text-[#143D60]">{report.titulo}</h4>
+                              <p className="text-sm text-gray-600">{report.regiao} • {report.data}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Badge className={`${getStatusColor(report.status)} text-white`}>
+                              {report.status}
+                            </Badge>
+                            {canTakeAction && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-[#A0C878] text-[#143D60] hover:bg-[#A0C878] hover:text-white"
+                                  >
+                                    <MoreVertical className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                  {(report.status === 'pendente' || report.status === 'validada') && (
+                                    <DropdownMenuItem
+                                      onClick={() => handleForwardReport(report.id)}
+                                      className="cursor-pointer"
+                                    >
+                                      <Send className="w-4 h-4 mr-2 text-orange-500" />
+                                      <span>Encaminhar</span>
+                                    </DropdownMenuItem>
+                                  )}
+                                  {report.status === 'encaminhada' && (
+                                    <DropdownMenuItem
+                                      onClick={() => handleResolveReport(report.id)}
+                                      className="cursor-pointer"
+                                    >
+                                      <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                                      <span>Marcar como Resolvida</span>
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Badge className={`${getStatusColor(report.status)} text-white`}>
-                            {report.status}
-                          </Badge>
-                          {canTakeAction && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="border-[#A0C878] text-[#143D60] hover:bg-[#A0C878] hover:text-white"
-                                >
-                                  <MoreVertical className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-56">
-                                {(report.status === 'pendente' || report.status === 'validada') && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleForwardReport(report.id)}
-                                    className="cursor-pointer"
-                                  >
-                                    <Send className="w-4 h-4 mr-2 text-orange-500" />
-                                    <span>Encaminhar</span>
-                                  </DropdownMenuItem>
-                                )}
-                                {report.status === 'encaminhada' && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleResolveReport(report.id)}
-                                    className="cursor-pointer"
-                                  >
-                                    <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
-                                    <span>Marcar como Resolvida</span>
-                                  </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -548,17 +558,22 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             </Card>
           </TabsContent>
 
-          <TabsContent value="exports" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
+          <TabsContent value="exports" className="flex justify-center">
+            <div className="w-full max-w-xl">
+              <Card className="p-6">
                 <CardHeader>
-                  <CardTitle className="text-[#143D60]">Relatório de Denúncias</CardTitle>
-                  <CardDescription>Exportar dados de denúncias por período</CardDescription>
+                  <CardTitle className="text-[#143D60] text-lg">Relatório de Denúncias</CardTitle>
+                  <CardDescription className="text-base">
+                    Exportar dados de denúncias por período
+                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-white flex items-center justify-center">
+
+                <CardContent className="space-y-6">
+                  <Button className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-white flex items-center justify-center py-6 text-lg">
                     <a
-                      href={`${(import.meta as any).env?.VITE_API_URL || 'http://localhost:3333'}/relatorios/infografico`}
+                      href={`${(import.meta as any).env?.VITE_API_URL ||
+                        "http://localhost:3333"
+                        }/relatorios/infografico`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center justify-center w-full"
@@ -567,31 +582,19 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                     </a>
                   </Button>
 
-                  <Button variant="outline" className="w-full border-[#A0C878] text-[#143D60]">
+                  <Button
+                    variant="outline"
+                    className="w-full border-[#A0C878] text-[#143D60] py-6 text-lg"
+                  >
                     <FileText className="w-4 h-4 mr-2" />
                     Relatório Customizado
                   </Button>
                 </CardContent>
               </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-[#143D60]">Dados de Participação</CardTitle>
-                  <CardDescription>Métricas de engajamento dos usuários</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Button className="w-full bg-[#143D60] hover:bg-[#0F2F4A] text-white">
-                    <Download className="w-4 h-4 mr-2" />
-                    Relatório de Usuários
-                  </Button>
-                  <Button variant="outline" className="w-full border-[#143D60] text-[#143D60]">
-                    <TrendingUp className="w-4 h-4 mr-2" />
-                    Análise de Tendências
-                  </Button>
-                </CardContent>
-              </Card>
             </div>
           </TabsContent>
+
+
         </Tabs>
       </div>
     </div>
