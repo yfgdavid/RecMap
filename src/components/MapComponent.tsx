@@ -1,17 +1,14 @@
-// src/components/MapComponent.tsx
 import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import api from "../services/api";
 
-
 const recifeCenter: [number, number] = [-8.0476, -34.877];
 const recifeBounds: [[number, number], [number, number]] = [
   [-8.164, -34.976],
   [-7.903, -34.841],
 ];
-
 
 interface Denuncia {
   id: number;
@@ -21,6 +18,7 @@ interface Denuncia {
   longitude: number;
   status: string;
   foto?: string;
+  endereco?: string;
 }
 
 interface PontoColeta {
@@ -31,13 +29,13 @@ interface PontoColeta {
   latitude: number;
   longitude: number;
   foto?: string;
+  endereco?: string;
 }
 
 interface MapaData {
   denuncias: Denuncia[];
   pontos: PontoColeta[];
 }
-
 
 interface MapComponentProps {
   selectedLocation?: { lat: number; lng: number } | null;
@@ -59,8 +57,36 @@ const createColoredIcon = (color: string) =>
     iconAnchor: [10, 10],
   });
 
-// Centralizar mapa na posição recebida do Dashboard
+// Função para fazer reverse geocoding (lat/lng → endereço)
+const obterEndereco = async (lat: number, lng: number): Promise<string> => {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+    );
+    const data = await response.json();
+    
+    // Extrair endereço formatado
+    const endereco = data.address;
+    const rua = endereco.road || endereco.street || "";
+    const numero = endereco.house_number || "";
+    const bairro = endereco.neighbourhood || endereco.suburb || "";
+    const cidade = endereco.city || endereco.town || "Recife";
+    
+    // Montar string de endereço
+    let enderecoFormatado = "";
+    if (rua) enderecoFormatado += rua;
+    if (numero) enderecoFormatado += `, ${numero}`;
+    if (bairro) enderecoFormatado += ` - ${bairro}`;
+    enderecoFormatado += `, ${cidade}`;
+    
+    return enderecoFormatado || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  } catch (error) {
+    console.error("Erro ao obter endereço:", error);
+    return `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  }
+};
 
+// Centralizar mapa na posição recebida
 const FlyToSelected = ({ location }: { location?: { lat: number; lng: number } | null }) => {
   const map = useMap();
 
@@ -80,6 +106,145 @@ const FlyToUser = ({ position }: { position: [number, number] }) => {
     if (position) map.flyTo(position, 16);
   }, [position, map]);
   return null;
+};
+
+// Componente do Popup para Denúncia
+const DenunciaPopup = ({ denuncia }: { denuncia: Denuncia }) => {
+  const [endereco, setEndereco] = useState<string>("Carregando endereço...");
+  const [mostrarEndereco, setMostrarEndereco] = useState(false);
+
+  useEffect(() => {
+    if (!denuncia.endereco && !mostrarEndereco) return;
+    
+    if (denuncia.endereco) {
+      setEndereco(denuncia.endereco);
+    } else {
+      obterEndereco(denuncia.latitude, denuncia.longitude).then((end) => {
+        setEndereco(end);
+      });
+    }
+  }, [mostrarEndereco, denuncia.endereco, denuncia.latitude, denuncia.longitude]);
+
+  return (
+    <div className="w-64 rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white">
+      {denuncia.foto && (
+        <div className="w-full aspect-[4/3] overflow-hidden">
+          <img
+            src={denuncia.foto}
+            alt={denuncia.titulo}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
+      <div className="p-4 space-y-3">
+        <div>
+          <h3 className="font-bold text-sm text-[#143D60] leading-tight">
+            {denuncia.titulo}
+          </h3>
+          <p className="text-xs text-gray-600 leading-snug mt-1">
+            {denuncia.descricao}
+          </p>
+        </div>
+
+        <span
+          className={`inline-block px-2 py-1 text-xs font-semibold rounded-md
+            ${
+              denuncia.status.toLowerCase() === "encaminhada"
+                ? "bg-orange-100 text-orange-700"
+                : denuncia.status.toLowerCase() === "resolvida"
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+        >
+          {denuncia.status}
+        </span>
+
+        {/* Botão para mostrar localização */}
+        <button
+          onClick={() => setMostrarEndereco(!mostrarEndereco)}
+          className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-[#143D60] font-semibold py-2 px-3 rounded-lg transition text-xs flex items-center justify-center gap-2"
+        >
+          📍 {mostrarEndereco ? "Ocultar Localização" : "Ver Localização"}
+        </button>
+
+        {/* Mostrar endereço quando botão clicado */}
+        {mostrarEndereco && (
+          <div className="bg-[#DDEB9D] bg-opacity-30 border border-[#A0C878] rounded-lg p-2 text-xs text-[#143D60] font-medium">
+            <p className="break-words">{endereco}</p>
+            <p className="text-[10px] text-gray-600 mt-1">
+              Lat: {denuncia.latitude.toFixed(4)}, Lng: {denuncia.longitude.toFixed(4)}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Componente do Popup para Ponto de Coleta
+const PontoPopup = ({ ponto }: { ponto: PontoColeta }) => {
+  const [endereco, setEndereco] = useState<string>("Carregando endereço...");
+  const [mostrarEndereco, setMostrarEndereco] = useState(false);
+
+  useEffect(() => {
+    if (!ponto.endereco && !mostrarEndereco) return;
+    
+    if (ponto.endereco) {
+      setEndereco(ponto.endereco);
+    } else {
+      obterEndereco(ponto.latitude, ponto.longitude).then((end) => {
+        setEndereco(end);
+      });
+    }
+  }, [mostrarEndereco, ponto.endereco, ponto.latitude, ponto.longitude]);
+
+  return (
+    <div className="w-64 rounded-xl overflow-hidden shadow-lg border border-gray-200 bg-white">
+      {ponto.foto && (
+        <div className="w-full aspect-[4/3] overflow-hidden">
+          <img
+            src={ponto.foto}
+            alt={ponto.titulo}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
+      <div className="p-4 space-y-3">
+        <div>
+          <h3 className="font-bold text-sm text-[#143D60] leading-tight">
+            {ponto.titulo}
+          </h3>
+          <p className="text-xs text-gray-600 leading-snug mt-1">
+            {ponto.descricao}
+          </p>
+        </div>
+
+        <span className="inline-block px-2 py-1 text-xs font-semibold rounded-md bg-green-100 text-green-700">
+          {ponto.tipo_residuo}
+        </span>
+
+        {/* Botão para mostrar localização */}
+        <button
+          onClick={() => setMostrarEndereco(!mostrarEndereco)}
+          className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-[#143D60] font-semibold py-2 px-3 rounded-lg transition text-xs flex items-center justify-center gap-2"
+        >
+          📍 {mostrarEndereco ? "Ocultar Localização" : "Ver Localização"}
+        </button>
+
+        {/* Mostrar endereço quando botão clicado */}
+        {mostrarEndereco && (
+          <div className="bg-[#DDEB9D] bg-opacity-30 border border-[#A0C878] rounded-lg p-2 text-xs text-[#143D60] font-medium">
+            <p className="break-words">{endereco}</p>
+            <p className="text-[10px] text-gray-600 mt-1">
+              Lat: {ponto.latitude.toFixed(4)}, Lng: {ponto.longitude.toFixed(4)}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 };
 
 const MapComponent = ({ selectedLocation }: MapComponentProps) => {
@@ -103,6 +268,7 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
             longitude: d.longitude + i * 0.00005,
             status: d.status || "PENDENTE",
             foto: d.foto || undefined,
+            endereco: d.endereco || undefined,
           }));
 
         const pontos: PontoColeta[] = data
@@ -115,6 +281,7 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
             latitude: p.latitude,
             longitude: p.longitude,
             foto: p.foto || undefined,
+            endereco: p.endereco || undefined,
           }));
 
         setDadosMapa({ denuncias, pontos });
@@ -146,7 +313,6 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
       maxBounds={recifeBounds}
       maxBoundsViscosity={1.0}
     >
-      
       {selectedLocation && <FlyToSelected location={selectedLocation} />}
 
       <TileLayer
@@ -154,58 +320,22 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {dadosMapa.denuncias.map((denuncia) => {
-        // Define a cor do marcador baseado no status
-        const getMarkerColor = (status: string) => {
-          const statusLower = status.toLowerCase();
-          if (statusLower === "resolvida") return "#2563EB"; // Azul (resolvido/concluído)
-          if (statusLower === "encaminhada") return "#FFA500"; // Laranja
-          return "#FF2C2C"; // Vermelho (padrão para pendente/validada)
-        };
-
-        return (
-          <Marker
-            key={`den-${denuncia.id}`}
-            position={[denuncia.latitude, denuncia.longitude]}
-            icon={createColoredIcon(getMarkerColor(denuncia.status))}
-          >
+      {/* Marcadores de Denúncias */}
+      {dadosMapa.denuncias.map((denuncia) => (
+        <Marker
+          key={`den-${denuncia.id}`}
+          position={[denuncia.latitude, denuncia.longitude]}
+          icon={createColoredIcon(
+            denuncia.status.toLowerCase() === "encaminhada" ? "#FFA500" : "#FF2C2C"
+          )}
+        >
           <Popup>
-            <div className="w-44 rounded-lg overflow-hidden shadow-lg border border-gray-200 bg-white">
-
-              {denuncia.foto && (
-                <div className="w-full aspect-[4/3] overflow-hidden">
-                  <img
-                    src={denuncia.foto}
-                    alt={denuncia.titulo}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-
-              <div className="p-2 space-y-1">
-                <h3 className="font-semibold text-[#143D60] text-sm leading-tight">{denuncia.titulo}</h3>
-                <p className="text-xs text-gray-600 leading-snug line-clamp-2">{denuncia.descricao}</p>
-
-                <span
-                  className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md
-                    ${
-                      denuncia.status.toLowerCase() === "resolvida"
-                        ? "bg-blue-100 text-blue-700"
-                        : denuncia.status.toLowerCase() === "encaminhada"
-                        ? "bg-orange-100 text-orange-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                >
-                  {denuncia.status}
-                </span>
-              </div>
-
-            </div>
+            <DenunciaPopup denuncia={denuncia} />
           </Popup>
         </Marker>
-        );
-      })}
+      ))}
 
+      {/* Marcadores de Pontos de Coleta */}
       {dadosMapa.pontos.map((ponto) => (
         <Marker
           key={`ponto-${ponto.id}`}
@@ -213,32 +343,12 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
           icon={createColoredIcon("#069240")}
         >
           <Popup>
-            <div className="w-44 rounded-lg overflow-hidden shadow-lg border border-gray-200 bg-white">
-
-              {ponto.foto && (
-                <div className="w-full aspect-[4/3] overflow-hidden">
-                  <img
-                    src={ponto.foto}
-                    alt={ponto.titulo}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-
-              <div className="p-2 space-y-1">
-                <h3 className="font-semibold text-[#143D60] text-sm leading-tight">{ponto.titulo}</h3>
-                <p className="text-xs text-gray-600 leading-snug line-clamp-2">{ponto.descricao}</p>
-
-                <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md bg-green-100 text-green-700">
-                  {ponto.tipo_residuo}
-                </span>
-              </div>
-
-            </div>
+            <PontoPopup ponto={ponto} />
           </Popup>
         </Marker>
       ))}
 
+      {/* Marcador de Localização do Usuário */}
       {userPosition && (
         <>
           <FlyToUser position={userPosition} />
@@ -250,7 +360,14 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
               iconAnchor: [15, 30],
             })}
           >
-            <Popup>Você está aqui</Popup>
+            <Popup>
+              <div className="text-center">
+                <p className="font-semibold text-[#143D60]">Você está aqui</p>
+                <p className="text-xs text-gray-600">
+                  {userPosition[0].toFixed(4)}, {userPosition[1].toFixed(4)}
+                </p>
+              </div>
+            </Popup>
           </Marker>
         </>
       )}

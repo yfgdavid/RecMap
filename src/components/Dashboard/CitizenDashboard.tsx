@@ -392,7 +392,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-[#143D60] text-base sm:text-lg">Pontos de Coleta e Denúncias</CardTitle>
-                    <CardDescription className="text-xs sm:text-sm">Veja locais próximos a você</CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">Veja locais próximos a você (clique nos pontos coloridos para exibir mais detalhes.)</CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
                     <Filter className="w-4 h-4 text-gray-500" />
@@ -418,22 +418,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     {/* Aspect ratio container para manter proporções */}
 
                     <MapComponent selectedLocation={selectedLocation} />
-                    {/* Overlay com legenda permanece igual */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#143D60]/90 to-transparent p-4">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 text-white">
-                        <p className="text-sm font-medium">Legenda:</p>
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-lg"></div>
-                            <span className="text-xs sm:text-sm">Denúncias</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
-                            <span className="text-xs sm:text-sm">Pontos de coleta</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+
                   </div>
                 </div>
 
