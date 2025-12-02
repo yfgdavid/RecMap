@@ -9,7 +9,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '../ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { RecMapLogo } from '../RecMapLogo';
 import { LoadingOverlay } from '../LoadingOverlay';
 import { ImageWithThumbnail } from '../ImageWithThumbnail';
@@ -20,7 +19,7 @@ import {
 } from 'recharts';
 import {
   FileText, MapPin, Users, TrendingUp, Download,
-  AlertTriangle, AlertCircle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send, Camera, X
+  AlertTriangle, AlertCircle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send
 } from 'lucide-react';
 import { User } from '../../App';
 
@@ -67,10 +66,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [loadingReports, setLoadingReports] = useState(false);
-  const [imageLoading, setImageLoading] = useState(false);
-  const [imageError, setImageError] = useState<string | null>(null);
 
   // Buscar dados do dashboard
   useEffect(() => {
@@ -153,9 +149,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         if (result.success && result.data) {
           const denunciasFormatadas = result.data.denuncias.map((d: any) => {
             const fotoUrl = d.foto ? getImageUrl(d.foto) : null;
-            if (d.foto) {
-              console.log(`Denúncia ${d.id} - Foto original: ${d.foto}, URL completa: ${fotoUrl}`);
-            }
             return {
               id: d.id,
               titulo: d.titulo,
@@ -516,31 +509,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                         
                         {/* Botões e badges - sempre alinhados */}
                         <div className="flex flex-wrap items-center gap-2 justify-end md:justify-start">
-                          {/* Container fixo para botão Ver Foto - garante alinhamento */}
-                          <div className="w-full sm:w-[120px] flex-shrink-0">
-                            {report.foto && getImageUrl(report.foto) ? (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  const photoUrl = getImageUrl(report.foto);
-                                  if (photoUrl) {
-                                    // Reseta estados antes de abrir
-                                    setImageError(null);
-                                    setImageLoading(true);
-                                    // Define a foto para abrir o dialog
-                                    setSelectedPhoto(photoUrl);
-                                    console.log('📸 Tentando carregar foto:', photoUrl);
-                                  }
-                                }}
-                                className="w-full border-[#143D60] text-[#143D60] hover:bg-[#143D60] hover:text-white whitespace-nowrap"
-                              >
-                                <Camera className="w-4 h-4 mr-2 flex-shrink-0" />
-                                Ver Foto
-                              </Button>
-                            ) : null}
-                          </div>
-                          
                           {/* Badge de status */}
                           <Badge className={`${getStatusColor(report.status)} text-white whitespace-nowrap flex-shrink-0`}>
                             {report.status}
@@ -669,90 +637,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
         </Tabs>
       </div>
-
-      {/* Dialog para visualizar foto */}
-      <Dialog 
-        open={!!selectedPhoto} 
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedPhoto(null);
-            setImageLoading(false);
-            setImageError(null);
-          }
-        }}
-      >
-          <DialogContent className="max-w-4xl w-full p-0">
-            <DialogHeader className="p-4 border-b">
-              <div className="flex items-center justify-between">
-                <div>
-                  <DialogTitle>Foto da Denúncia</DialogTitle>
-                  <DialogDescription className="sr-only">
-                    Visualização em tamanho ampliado da foto da denúncia
-                  </DialogDescription>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setSelectedPhoto(null);
-                    setImageLoading(false);
-                    setImageError(null);
-                  }}
-                  className="h-6 w-6"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-            </DialogHeader>
-            <div className="p-4 flex items-center justify-center bg-gray-100 min-h-[400px] relative">
-              {imageLoading && !imageError && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
-                  <div className="w-12 h-12 border-4 border-[#143D60] border-t-transparent rounded-full animate-spin"></div>
-                  <p className="text-[#143D60] font-medium">Carregando imagem...</p>
-                </div>
-              )}
-              {imageError && (
-                <div className="flex flex-col items-center justify-center gap-4 text-center p-6 w-full">
-                  <AlertCircle className="w-16 h-16 text-red-500 flex-shrink-0" />
-                  <div className="w-full max-w-md">
-                    <p className="text-red-600 font-semibold text-lg mb-2">Erro ao carregar imagem</p>
-                    <p className="text-gray-600 text-sm mb-4">
-                      Não foi possível carregar a foto. <strong>Isso é um problema no backend.</strong>
-                    </p>
-                    <div className="bg-gray-100 p-3 rounded text-xs break-all">
-                      <p className="font-semibold mb-1">URL tentada:</p>
-                      <p className="text-gray-700">{selectedPhoto}</p>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-4">
-                      O backend precisa:
-                      <br />1. Servir arquivos estáticos da pasta /uploads
-                      <br />2. Configurar CORS para permitir requisições de imagens
-                      <br />3. Garantir que os arquivos existam neste caminho
-                    </p>
-                  </div>
-                </div>
-              )}
-              {!imageError && selectedPhoto && (
-                <img
-                  key={selectedPhoto}
-                  src={selectedPhoto}
-                  alt="Foto da denúncia"
-                  className={`max-w-full max-h-[70vh] object-contain rounded transition-opacity ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
-                  onError={() => {
-                    console.error('❌ Erro ao carregar imagem no dialog:', selectedPhoto);
-                    setImageLoading(false);
-                    setImageError('A imagem não foi encontrada no servidor. Verifique se o arquivo existe e se a rota de arquivos estáticos está configurada no backend.');
-                  }}
-                  onLoad={() => {
-                    console.log('✅ Imagem carregada com sucesso:', selectedPhoto);
-                    setImageLoading(false);
-                    setImageError(null);
-                  }}
-                />
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
     </div>
   );
 }
