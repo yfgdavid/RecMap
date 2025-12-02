@@ -331,91 +331,93 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Navegação Responsiva */}
 
-          <div className="relative shadow-sm rounded-lg p-2 overflow-hidden">
-            {/* Seta esquerda - mobile */}
-            <button
-              onClick={() => document.getElementById("tabs-list")?.scrollBy({ left: -100, behavior: 'smooth' })}
-              className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center bg-white rounded-full shadow z-10 md:hidden"
-            >
-              <ChevronLeft className="w-5 h-5 text-gray-500" />
-            </button>
-
-            <div
-              id="tabs-list"
-              className="flex w-full lg:w-auto overflow-x-auto whitespace-nowrap gap-2 scrollbar-hide touch-pan-x"
-              style={{ WebkitOverflowScrolling: "touch" }}
-            >
-              <TabsList className="flex gap-2 justify-start lg:justify-center w-full lg:w-auto">
-                <TabsTrigger
-                  value="map"
-                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition
-               hover:shadow-md hover:bg-gray-100
-               data-[state=active]:bg-[#A0C878] data-[state=active]:text-white"
-                >
-                  <MapPin className="w-4 h-4" />
-                  <span>Mapa</span>
-                </TabsTrigger>
-
-                <TabsTrigger
-                  value="report"
-                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition
-               hover:shadow-md hover:bg-gray-100
-               data-[state=active]:bg-[#A0C878] data-[state=active]:text-white"
-                >
-                  <Camera className="w-4 h-4" />
-                  <span>Denunciar</span>
-                </TabsTrigger>
-
-                <TabsTrigger
-                  value="register"
-                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition
-               hover:shadow-md hover:bg-gray-100
-               data-[state=active]:bg-[#A0C878] data-[state=active]:text-white"
-                >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>Registrar</span>
-                </TabsTrigger>
-
-                <TabsTrigger
-                  value="my-reports"
-                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition
-               hover:shadow-md hover:bg-gray-100
-               data-[state=active]:bg-[#A0C878] data-[state=active]:text-white"
-                >
-                  <History className="w-4 h-4" />
-                  <span>Minhas Denúncias</span>
-                </TabsTrigger>
-
-                <TabsTrigger
-                  value="validate"
-                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition
-               hover:shadow-md hover:bg-gray-100
-               data-[state=active]:bg-[#A0C878] data-[state=active]:text-white"
-                >
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Validar</span>
-                </TabsTrigger>
-
-                <TabsTrigger
-                  value="education"
-                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition
-               hover:shadow-md hover:bg-gray-100
-               data-[state=active]:bg-[#A0C878] data-[state=active]:text-white"
-                >
-                  <BookOpen className="w-4 h-4" />
-                  <span>Aprender</span>
-                </TabsTrigger>
-              </TabsList>
+          <div className="relative">
+            {/* Desktop - sem setas, sem scroll */}
+            <div className="hidden md:block shadow-sm rounded-lg p-2">
+              <div
+                className="flex w-auto overflow-visible whitespace-nowrap gap-2"
+              >
+                <TabsList className="flex gap-2 justify-between w-full">
+                  <TabsTrigger value="map" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <MapPin className="w-4 h-4" />
+                    <span>Mapa</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="report" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <Camera className="w-4 h-4" />
+                    <span>Denunciar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="register" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <PlusCircle className="w-4 h-4" />
+                    <span>Registrar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="my-reports" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <History className="w-4 h-4" />
+                    <span>Minhas Denúncias</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="validate" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Validar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="education" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <BookOpen className="w-4 h-4" />
+                    <span>Aprender</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
             </div>
 
-            {/* Seta direita - mobile */}
-            <button
-              onClick={() => document.getElementById("tabs-list")?.scrollBy({ left: 100, behavior: 'smooth' })}
-              className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center bg-white rounded-full shadow z-10 md:hidden"
-            >
-              <ChevronRight className="w-5 h-5 text-gray-500" />
-            </button>
+            {/* Mobile - com setas e scroll */}
+            <div className="md:hidden relative shadow-sm rounded-lg p-2">
+              <button
+                onClick={() => document.getElementById("tabs-list-mobile")?.scrollBy({ left: -100, behavior: 'smooth' })}
+                className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center bg-white rounded-full shadow z-10"
+              >
+                <ChevronLeft className="w-5 h-5 text-gray-500" />
+              </button>
+
+              <div
+                id="tabs-list-mobile"
+                className="flex w-full overflow-x-auto whitespace-nowrap gap-2 scrollbar-hide touch-pan-x"
+                style={{ WebkitOverflowScrolling: "touch" }}
+              >
+                <TabsList className="flex gap-2 w-max">
+                  <TabsTrigger value="map" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <MapPin className="w-4 h-4" />
+                    <span>Mapa</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="report" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <Camera className="w-4 h-4" />
+                    <span>Denunciar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="register" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <PlusCircle className="w-4 h-4" />
+                    <span>Registrar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="my-reports" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <History className="w-4 h-4" />
+                    <span>Minhas Denúncias</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="validate" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Validar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="education" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <BookOpen className="w-4 h-4" />
+                    <span>Aprender</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <button
+                onClick={() => document.getElementById("tabs-list-mobile")?.scrollBy({ left: 100, behavior: 'smooth' })}
+                className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center bg-white rounded-full shadow z-10"
+              >
+                <ChevronRight className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
           </div>
+
+
           {/* Mapa */}
           <TabsContent value="map" className="space-y-6">
             <Card>
