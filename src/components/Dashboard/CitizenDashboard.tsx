@@ -13,6 +13,7 @@ import { RecMapLogo } from '../RecMapLogo';
 import { useEffect } from 'react';
 import { LocationInput } from '../LocationInput';
 import { LoadingOverlay } from '../LoadingOverlay';
+import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 
 import {
   MapPin, Camera, Send, History, Award, TrendingUp,
@@ -330,61 +331,93 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           {/* Navegação Responsiva */}
 
-          <div className="shadow-sm rounded-lg p-2 overflow-x-auto overflow-y-hidden" >
-            <TabsList className="
-              flex w-full overflow-x-auto whitespace-nowrap gap-2
-              justify-start
-              lg:overflow-visible lg:justify-center lg:w-auto
-              ">
-              <TabsTrigger
-                value="map"
-                className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+          <div className="relative">
+            {/* Desktop - sem setas, sem scroll */}
+            <div className="hidden md:block shadow-sm rounded-lg p-2">
+              <div
+                className="flex w-auto overflow-visible whitespace-nowrap gap-2"
               >
-                <MapPin className="w-4 h-4" />
-                <span>Mapa</span>
-              </TabsTrigger>
+                <TabsList className="flex gap-2 justify-between w-full">
+                  <TabsTrigger value="map" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <MapPin className="w-4 h-4" />
+                    <span>Mapa</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="report" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <Camera className="w-4 h-4" />
+                    <span>Denunciar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="register" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <PlusCircle className="w-4 h-4" />
+                    <span>Registrar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="my-reports" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <History className="w-4 h-4" />
+                    <span>Minhas Denúncias</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="validate" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Validar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="education" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <BookOpen className="w-4 h-4" />
+                    <span>Aprender</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+            </div>
 
-              <TabsTrigger
-                value="report"
-                className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+            {/* Mobile - com setas e scroll */}
+            <div className="md:hidden relative shadow-sm rounded-lg p-2">
+              <button
+                onClick={() => document.getElementById("tabs-list-mobile")?.scrollBy({ left: -100, behavior: 'smooth' })}
+                className="absolute left-0 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center bg-white rounded-full shadow z-10"
               >
-                <Camera className="w-4 h-4" />
-                <span>Denunciar</span>
-              </TabsTrigger>
+                <ChevronLeft className="w-5 h-5 text-gray-500" />
+              </button>
 
-              <TabsTrigger
-                value="register"
-                className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+              <div
+                id="tabs-list-mobile"
+                className="flex w-full overflow-x-auto whitespace-nowrap gap-2 scrollbar-hide touch-pan-x"
+                style={{ WebkitOverflowScrolling: "touch" }}
               >
-                <Camera className="w-4 h-4" />
-                <span>Registrar</span>
-              </TabsTrigger>
+                <TabsList className="flex gap-2 w-max">
+                  <TabsTrigger value="map" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <MapPin className="w-4 h-4" />
+                    <span>Mapa</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="report" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <Camera className="w-4 h-4" />
+                    <span>Denunciar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="register" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <PlusCircle className="w-4 h-4" />
+                    <span>Registrar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="my-reports" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <History className="w-4 h-4" />
+                    <span>Minhas Denúncias</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="validate" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Validar</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="education" className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition hover:shadow-md hover:bg-gray-100 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white">
+                    <BookOpen className="w-4 h-4" />
+                    <span>Aprender</span>
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-              <TabsTrigger
-                value="my-reports"
-                className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+              <button
+                onClick={() => document.getElementById("tabs-list-mobile")?.scrollBy({ left: 100, behavior: 'smooth' })}
+                className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center bg-white rounded-full shadow z-10"
               >
-                <History className="w-4 h-4" />
-                <span>Minhas Denúncias</span>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="validate"
-                className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
-              >
-                <CheckCircle className="w-4 h-4" />
-                <span>Validar</span>
-              </TabsTrigger>
-
-              <TabsTrigger
-                value="education"
-                className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>Aprender</span>
-              </TabsTrigger>
-            </TabsList>
+                <ChevronRight className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
           </div>
+
+
           {/* Mapa */}
           <TabsContent value="map" className="space-y-6">
             <Card>
@@ -392,22 +425,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <CardTitle className="text-[#143D60] text-base sm:text-lg">Pontos de Coleta e Denúncias</CardTitle>
-                    <CardDescription className="text-xs sm:text-sm">Veja locais próximos a você</CardDescription>
+                    <CardDescription className="text-xs sm:text-sm">Veja locais próximos a você (clique nos pontos coloridos para exibir mais detalhes.)</CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-gray-500" />
-                    <Select value={selectedFilter} onValueChange={setSelectedFilter}>
-                      <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Filtrar tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="reciclable">Reciclável</SelectItem>
-                        <SelectItem value="organic">Orgânico</SelectItem>
-                        <SelectItem value="electronic">Eletrônico</SelectItem>
-                        <SelectItem value="hazardous">Perigoso</SelectItem>
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
               </CardHeader>
@@ -418,22 +438,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     {/* Aspect ratio container para manter proporções */}
 
                     <MapComponent selectedLocation={selectedLocation} />
-                    {/* Overlay com legenda permanece igual */}
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#143D60]/90 to-transparent p-4">
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 text-white">
-                        <p className="text-sm font-medium">Legenda:</p>
-                        <div className="flex flex-wrap items-center gap-3 sm:gap-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-lg"></div>
-                            <span className="text-xs sm:text-sm">Denúncias</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-lg"></div>
-                            <span className="text-xs sm:text-sm">Pontos de coleta</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+
                   </div>
                 </div>
 
@@ -529,7 +534,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                       setReportSuccess(null);
                       setLoadingMessage('Enviando denúncia...');
                       setIsLoading(true);
-                      
+
                       const res = await fetch(`${import.meta.env.VITE_API_URL}/denuncias`, {
                         method: "POST",
                         body: formData,
@@ -716,7 +721,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     try {
                       setLoadingMessage('Registrando ponto de coleta...');
                       setIsLoading(true);
-                      
+
                       const res = await fetch(`${import.meta.env.VITE_API_URL}/pontos`, {
                         method: "POST",
                         body: formData,
