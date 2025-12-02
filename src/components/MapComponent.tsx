@@ -165,7 +165,7 @@ const DenunciaPopup = ({ denuncia }: { denuncia: Denuncia }) => {
           onClick={() => setMostrarEndereco(!mostrarEndereco)}
           className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-[#143D60] font-semibold py-2 px-3 rounded-lg transition text-xs flex items-center justify-center gap-2"
         >
-          📍 {mostrarEndereco ? "Ocultar Localização" : "Ver Localização"}
+           {mostrarEndereco ? "Ocultar Localização" : "Ver Localização"}
         </button>
 
         {/* Mostrar endereço quando botão clicado */}
@@ -230,7 +230,7 @@ const PontoPopup = ({ ponto }: { ponto: PontoColeta }) => {
           onClick={() => setMostrarEndereco(!mostrarEndereco)}
           className="w-full bg-[#A0C878] hover:bg-[#8BB668] text-[#143D60] font-semibold py-2 px-3 rounded-lg transition text-xs flex items-center justify-center gap-2"
         >
-          📍 {mostrarEndereco ? "Ocultar Localização" : "Ver Localização"}
+           {mostrarEndereco ? "Ocultar Localização" : "Ver Localização"}
         </button>
 
         {/* Mostrar endereço quando botão clicado */}
