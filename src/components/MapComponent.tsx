@@ -4,6 +4,8 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import api from "../services/api";
+import { getImageUrl } from "../utils/imageUrl";
+import { MapMarkerPopup } from "./MapMarkerPopup";
 
 
 const recifeCenter: [number, number] = [-8.0476, -34.877];
@@ -95,27 +97,33 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
 
         const denuncias: Denuncia[] = data
           .filter((item: any) => item.tipo === "denuncia")
-          .map((d: any, i: number) => ({
-            id: d.id,
-            titulo: d.titulo,
-            descricao: d.descricao,
-            latitude: d.latitude + i * 0.00005,
-            longitude: d.longitude + i * 0.00005,
-            status: d.status || "PENDENTE",
-            foto: d.foto || undefined,
-          }));
+          .map((d: any, i: number) => {
+            const fotoUrl = d.foto ? getImageUrl(d.foto) : undefined;
+            return {
+              id: d.id,
+              titulo: d.titulo,
+              descricao: d.descricao,
+              latitude: d.latitude + i * 0.00005,
+              longitude: d.longitude + i * 0.00005,
+              status: d.status || "PENDENTE",
+              foto: fotoUrl || undefined,
+            };
+          });
 
         const pontos: PontoColeta[] = data
           .filter((item: any) => item.tipo === "ponto")
-          .map((p: any) => ({
-            id: p.id,
-            titulo: p.titulo,
-            descricao: p.descricao,
-            tipo_residuo: p.tipo_residuo || "",
-            latitude: p.latitude,
-            longitude: p.longitude,
-            foto: p.foto || undefined,
-          }));
+          .map((p: any) => {
+            const fotoUrl = p.foto ? getImageUrl(p.foto) : undefined;
+            return {
+              id: p.id,
+              titulo: p.titulo,
+              descricao: p.descricao,
+              tipo_residuo: p.tipo_residuo || "",
+              latitude: p.latitude,
+              longitude: p.longitude,
+              foto: fotoUrl || undefined,
+            };
+          });
 
         setDadosMapa({ denuncias, pontos });
       } catch (error) {
@@ -169,40 +177,15 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
             position={[denuncia.latitude, denuncia.longitude]}
             icon={createColoredIcon(getMarkerColor(denuncia.status))}
           >
-          <Popup>
-            <div className="w-44 rounded-lg overflow-hidden shadow-lg border border-gray-200 bg-white">
-
-              {denuncia.foto && (
-                <div className="w-full aspect-[4/3] overflow-hidden">
-                  <img
-                    src={denuncia.foto}
-                    alt={denuncia.titulo}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-
-              <div className="p-2 space-y-1">
-                <h3 className="font-semibold text-[#143D60] text-sm leading-tight">{denuncia.titulo}</h3>
-                <p className="text-xs text-gray-600 leading-snug line-clamp-2">{denuncia.descricao}</p>
-
-                <span
-                  className={`inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md
-                    ${
-                      denuncia.status.toLowerCase() === "resolvida"
-                        ? "bg-blue-100 text-blue-700"
-                        : denuncia.status.toLowerCase() === "encaminhada"
-                        ? "bg-orange-100 text-orange-700"
-                        : "bg-red-100 text-red-700"
-                    }`}
-                >
-                  {denuncia.status}
-                </span>
-              </div>
-
-            </div>
-          </Popup>
-        </Marker>
+            <Popup>
+              <MapMarkerPopup
+                titulo={denuncia.titulo}
+                descricao={denuncia.descricao}
+                foto={denuncia.foto}
+                status={denuncia.status}
+              />
+            </Popup>
+          </Marker>
         );
       })}
 
@@ -213,28 +196,12 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
           icon={createColoredIcon("#069240")}
         >
           <Popup>
-            <div className="w-44 rounded-lg overflow-hidden shadow-lg border border-gray-200 bg-white">
-
-              {ponto.foto && (
-                <div className="w-full aspect-[4/3] overflow-hidden">
-                  <img
-                    src={ponto.foto}
-                    alt={ponto.titulo}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-
-              <div className="p-2 space-y-1">
-                <h3 className="font-semibold text-[#143D60] text-sm leading-tight">{ponto.titulo}</h3>
-                <p className="text-xs text-gray-600 leading-snug line-clamp-2">{ponto.descricao}</p>
-
-                <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-semibold rounded-md bg-green-100 text-green-700">
-                  {ponto.tipo_residuo}
-                </span>
-              </div>
-
-            </div>
+            <MapMarkerPopup
+              titulo={ponto.titulo}
+              descricao={ponto.descricao}
+              foto={ponto.foto}
+              tipoResiduo={ponto.tipo_residuo}
+            />
           </Popup>
         </Marker>
       ))}

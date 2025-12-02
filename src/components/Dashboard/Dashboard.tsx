@@ -9,14 +9,18 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '../ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../ui/dialog';
 import { RecMapLogo } from '../RecMapLogo';
+import { LoadingOverlay } from '../LoadingOverlay';
+import { ImageWithThumbnail } from '../ImageWithThumbnail';
+import { getImageUrl } from '../../utils/imageUrl';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import {
   FileText, MapPin, Users, TrendingUp, Download,
-  AlertTriangle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send
+  AlertTriangle, AlertCircle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send, Camera, X
 } from 'lucide-react';
 import { User } from '../../App';
 
@@ -63,6 +67,10 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   // Buscar dados do dashboard
   useEffect(() => {
@@ -136,23 +144,34 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   useEffect(() => {
     const fetchReports = async () => {
       try {
+        setLoadingReports(true);
         const response = await fetch(`${API_URL}/governamental/denuncias`);
         if (!response.ok) {
           throw new Error('Erro ao carregar denúncias');
         }
         const result = await response.json();
         if (result.success && result.data) {
-          const denunciasFormatadas = result.data.denuncias.map((d: any) => ({
-            id: d.id,
-            titulo: d.titulo,
-            regiao: d.localizacao || 'Não informado',
-            status: d.status.toLowerCase(),
-            data: new Date(d.data_criacao).toISOString().split('T')[0]
-          }));
+          const denunciasFormatadas = result.data.denuncias.map((d: any) => {
+            const fotoUrl = d.foto ? getImageUrl(d.foto) : null;
+            if (d.foto) {
+              console.log(`Denúncia ${d.id} - Foto original: ${d.foto}, URL completa: ${fotoUrl}`);
+            }
+            return {
+              id: d.id,
+              titulo: d.titulo,
+              descricao: d.descricao || '',
+              regiao: d.localizacao || 'Não informado',
+              status: d.status.toLowerCase(),
+              data: new Date(d.data_criacao).toISOString().split('T')[0],
+              foto: fotoUrl
+            };
+          });
           setReports(denunciasFormatadas);
         }
       } catch (err) {
         console.error('Erro ao buscar denúncias:', err);
+      } finally {
+        setLoadingReports(false);
       }
     };
 
@@ -209,6 +228,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {loading && <LoadingOverlay message="Carregando dashboard..." />}
+      {loadingReports && <LoadingOverlay message="Carregando denúncias..." />}
       {/* Header */}
       <header className="bg-[#143D60] text-white shadow-lg">
         <div className="container mx-auto px-4 py-4">
@@ -249,11 +270,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
           {/* Visão Geral */}
           <TabsContent value="overview" className="space-y-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <p className="text-gray-600">Carregando dados...</p>
-              </div>
-            ) : error ? (
+            {error ? (
               <div className="flex items-center justify-center py-12">
                 <p className="text-red-600">{error}</p>
               </div>
@@ -365,54 +382,79 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                     <CardContent>
                       {tiposDenunciasData.length > 0 ? (
                         <div className="w-full">
-                          <ResponsiveContainer width="100%" height={280} className="hidden md:block">
-                            <PieChart>
-                              <Pie
-                                data={tiposDenunciasData}
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={90}
-                                dataKey="value"
-                                label={({ name, value }) => `${name}: ${value}%`}
-                                labelLine={{ stroke: '#A0C878', strokeWidth: 1 }}
-                              >
-                                {tiposDenunciasData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </Pie>
-                              <Tooltip />
-                            </PieChart>
-                          </ResponsiveContainer>
+                          {/* Gráfico de Pizza - Desktop com Labels */}
+                          <div className="hidden md:block">
+                            <ResponsiveContainer width="100%" height={350}>
+                              <PieChart>
+                                <Pie
+                                  data={tiposDenunciasData}
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius={80}
+                                  innerRadius={30}
+                                  dataKey="value"
+                                  paddingAngle={3}
+                                  label={({ name, value }) => `${name}: ${value}%`}
+                                  labelLine={{ strokeWidth: 1, stroke: '#94a3b8' }}
+                                >
+                                  {tiposDenunciasData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                  ))}
+                                </Pie>
+                                <Tooltip 
+                                  formatter={(value: number) => [`${value}%`, 'Porcentagem']}
+                                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
 
-                          {/* Versão Mobile - Gráfico Menor */}
-                          <ResponsiveContainer width="100%" height={240} className="md:hidden">
-                            <PieChart>
-                              <Pie
-                                data={tiposDenunciasData}
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={70}
-                                dataKey="value"
-                              >
-                                {tiposDenunciasData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </Pie>
-                              <Tooltip />
-                            </PieChart>
-                          </ResponsiveContainer>
+                          {/* Gráfico de Pizza - Mobile (sem labels para evitar sobreposição) */}
+                          <div className="md:hidden">
+                            <ResponsiveContainer width="100%" height={250}>
+                              <PieChart>
+                                <Pie
+                                  data={tiposDenunciasData}
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius={80}
+                                  innerRadius={30}
+                                  dataKey="value"
+                                  paddingAngle={3}
+                                >
+                                  {tiposDenunciasData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                  ))}
+                                </Pie>
+                                <Tooltip 
+                                  formatter={(value: number, name: string, props: any) => [
+                                    `${props.payload.name}: ${value}%`, 
+                                    'Porcentagem'
+                                  ]}
+                                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
 
-                          {/* Legenda Customizada Responsiva */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                          {/* Legenda Customizada Responsiva - Apenas no Mobile */}
+                          <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-4">
                             {tiposDenunciasData.map((item, index) => (
-                              <div key={index} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                              <div 
+                                key={index} 
+                                className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-200"
+                              >
                                 <div
-                                  className="w-4 h-4 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
+                                  className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex-shrink-0 border-2 border-white shadow-sm mt-0.5"
                                   style={{ backgroundColor: item.color }}
                                 ></div>
-                                <div className="flex flex-col min-w-0">
-                                  <span className="text-sm font-medium text-[#143D60] truncate">{item.name}</span>
-                                  <span className="text-xs text-gray-600">{item.value}% ({item.quantidade})</span>
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <span className="text-xs sm:text-sm font-medium text-[#143D60] break-words leading-tight">
+                                    {item.name}
+                                  </span>
+                                  <span className="text-xs text-gray-600 mt-0.5">
+                                    {item.value}% ({item.quantidade})
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -438,11 +480,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 <CardDescription>Últimas denúncias registradas na plataforma</CardDescription>
               </CardHeader>
               <CardContent>
-                {loading && activeTab === 'reports' ? (
-                  <div className="flex items-center justify-center py-12">
-                    <p className="text-gray-600">Carregando denúncias...</p>
-                  </div>
-                ) : reports.length === 0 ? (
+                {reports.length === 0 ? (
                   <div className="flex items-center justify-center py-12">
                     <p className="text-gray-500">Nenhuma denúncia encontrada</p>
                   </div>
@@ -453,25 +491,59 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                     const canTakeAction = report.status !== 'resolvida';
 
                     return (
-                      <div key={report.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 gap-3">
-                        <div className="flex items-center gap-4 flex-1 min-w-0">
-                          <StatusIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                      <div key={report.id} className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-4 p-4 border rounded-lg hover:bg-gray-50">
+                        {/* Conteúdo principal */}
+                        <div className="flex items-start gap-4 min-w-0">
+                          <StatusIcon className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-[#143D60]">{report.titulo}</h4>
-                            <p className="text-sm text-gray-600">{report.regiao} • {report.data}</p>
+                            <h4 className="font-medium text-[#143D60] break-words">{report.titulo}</h4>
+                            <p className="text-sm text-gray-600 break-words">{report.regiao} • {report.data}</p>
+                            {report.descricao && (
+                              <p className="text-xs text-gray-500 mt-1 line-clamp-2 break-words">{report.descricao}</p>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Badge className={`${getStatusColor(report.status)} text-white`}>
+                        
+                        {/* Botões e badges - sempre alinhados */}
+                        <div className="flex flex-wrap items-center gap-2 justify-end md:justify-start">
+                          {/* Container fixo para botão Ver Foto - garante alinhamento */}
+                          <div className="w-full sm:w-[120px] flex-shrink-0">
+                            {report.foto && getImageUrl(report.foto) ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const photoUrl = getImageUrl(report.foto);
+                                  if (photoUrl) {
+                                    // Reseta estados antes de abrir
+                                    setImageError(null);
+                                    setImageLoading(true);
+                                    // Define a foto para abrir o dialog
+                                    setSelectedPhoto(photoUrl);
+                                    console.log('📸 Tentando carregar foto:', photoUrl);
+                                  }
+                                }}
+                                className="w-full border-[#143D60] text-[#143D60] hover:bg-[#143D60] hover:text-white whitespace-nowrap"
+                              >
+                                <Camera className="w-4 h-4 mr-2 flex-shrink-0" />
+                                Ver Foto
+                              </Button>
+                            ) : null}
+                          </div>
+                          
+                          {/* Badge de status */}
+                          <Badge className={`${getStatusColor(report.status)} text-white whitespace-nowrap flex-shrink-0`}>
                             {report.status}
                           </Badge>
+                          
+                          {/* Menu de ações */}
                           {canTakeAction && (
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="border-[#A0C878] text-[#143D60] hover:bg-[#A0C878] hover:text-white"
+                                  className="flex-shrink-0 border-[#A0C878] text-[#143D60] hover:bg-[#A0C878] hover:text-white"
                                 >
                                   <MoreVertical className="w-4 h-4" />
                                 </Button>
@@ -594,6 +666,90 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Dialog para visualizar foto */}
+      <Dialog 
+        open={!!selectedPhoto} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedPhoto(null);
+            setImageLoading(false);
+            setImageError(null);
+          }
+        }}
+      >
+          <DialogContent className="max-w-4xl w-full p-0">
+            <DialogHeader className="p-4 border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <DialogTitle>Foto da Denúncia</DialogTitle>
+                  <DialogDescription className="sr-only">
+                    Visualização em tamanho ampliado da foto da denúncia
+                  </DialogDescription>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    setSelectedPhoto(null);
+                    setImageLoading(false);
+                    setImageError(null);
+                  }}
+                  className="h-6 w-6"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </DialogHeader>
+            <div className="p-4 flex items-center justify-center bg-gray-100 min-h-[400px] relative">
+              {imageLoading && !imageError && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 z-10">
+                  <div className="w-12 h-12 border-4 border-[#143D60] border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-[#143D60] font-medium">Carregando imagem...</p>
+                </div>
+              )}
+              {imageError && (
+                <div className="flex flex-col items-center justify-center gap-4 text-center p-6 w-full">
+                  <AlertCircle className="w-16 h-16 text-red-500 flex-shrink-0" />
+                  <div className="w-full max-w-md">
+                    <p className="text-red-600 font-semibold text-lg mb-2">Erro ao carregar imagem</p>
+                    <p className="text-gray-600 text-sm mb-4">
+                      Não foi possível carregar a foto. <strong>Isso é um problema no backend.</strong>
+                    </p>
+                    <div className="bg-gray-100 p-3 rounded text-xs break-all">
+                      <p className="font-semibold mb-1">URL tentada:</p>
+                      <p className="text-gray-700">{selectedPhoto}</p>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-4">
+                      O backend precisa:
+                      <br />1. Servir arquivos estáticos da pasta /uploads
+                      <br />2. Configurar CORS para permitir requisições de imagens
+                      <br />3. Garantir que os arquivos existam neste caminho
+                    </p>
+                  </div>
+                </div>
+              )}
+              {!imageError && selectedPhoto && (
+                <img
+                  key={selectedPhoto}
+                  src={selectedPhoto}
+                  alt="Foto da denúncia"
+                  className={`max-w-full max-h-[70vh] object-contain rounded transition-opacity ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                  onError={() => {
+                    console.error('❌ Erro ao carregar imagem no dialog:', selectedPhoto);
+                    setImageLoading(false);
+                    setImageError('A imagem não foi encontrada no servidor. Verifique se o arquivo existe e se a rota de arquivos estáticos está configurada no backend.');
+                  }}
+                  onLoad={() => {
+                    console.log('✅ Imagem carregada com sucesso:', selectedPhoto);
+                    setImageLoading(false);
+                    setImageError(null);
+                  }}
+                />
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
     </div>
   );
 }
