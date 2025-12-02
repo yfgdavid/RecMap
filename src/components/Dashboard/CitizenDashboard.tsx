@@ -13,7 +13,7 @@ import { RecMapLogo } from '../RecMapLogo';
 import { useEffect } from 'react';
 import { LocationInput } from '../LocationInput';
 import { LoadingOverlay } from '../LoadingOverlay';
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 
 import {
   MapPin, Camera, Send, History, Award, TrendingUp,
@@ -348,7 +348,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
               <TabsList className="flex gap-2 justify-start lg:justify-center w-full lg:w-auto">
                 <TabsTrigger
                   value="map"
-                  className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition
+               hover:shadow-md hover:bg-gray-100
+               data-[state=active]:bg-[#A0C878] data-[state=active]:text-white"
                 >
                   <MapPin className="w-4 h-4" />
                   <span>Mapa</span>
@@ -356,7 +358,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
                 <TabsTrigger
                   value="report"
-                  className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition
+               hover:shadow-md hover:bg-gray-100
+               data-[state=active]:bg-[#A0C878] data-[state=active]:text-white"
                 >
                   <Camera className="w-4 h-4" />
                   <span>Denunciar</span>
@@ -364,15 +368,19 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
                 <TabsTrigger
                   value="register"
-                  className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition
+               hover:shadow-md hover:bg-gray-100
+               data-[state=active]:bg-[#A0C878] data-[state=active]:text-white"
                 >
-                  <Camera className="w-4 h-4" />
+                  <PlusCircle className="w-4 h-4" />
                   <span>Registrar</span>
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="my-reports"
-                  className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition
+               hover:shadow-md hover:bg-gray-100
+               data-[state=active]:bg-[#A0C878] data-[state=active]:text-white"
                 >
                   <History className="w-4 h-4" />
                   <span>Minhas Denúncias</span>
@@ -380,7 +388,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
                 <TabsTrigger
                   value="validate"
-                  className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition
+               hover:shadow-md hover:bg-gray-100
+               data-[state=active]:bg-[#A0C878] data-[state=active]:text-white"
                 >
                   <CheckCircle className="w-4 h-4" />
                   <span>Validar</span>
@@ -388,7 +398,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
                 <TabsTrigger
                   value="education"
-                  className="flex items-center gap-1 data-[state=active]:bg-[#A0C878] data-[state=active]:text-white whitespace-nowrap px-3 py-2 rounded-lg transition"
+                  className="flex items-center gap-1 whitespace-nowrap px-3 py-2 rounded-lg transition
+               hover:shadow-md hover:bg-gray-100
+               data-[state=active]:bg-[#A0C878] data-[state=active]:text-white"
                 >
                   <BookOpen className="w-4 h-4" />
                   <span>Aprender</span>
