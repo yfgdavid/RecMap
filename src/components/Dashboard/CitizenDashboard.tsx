@@ -14,6 +14,9 @@ import { useEffect } from 'react';
 import { LocationInput } from '../LocationInput';
 import { LoadingOverlay } from '../LoadingOverlay';
 import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
+import type { Report } from '../../types/report';
+
+
 
 import {
   MapPin, Camera, Send, History, Award, TrendingUp,
@@ -48,26 +51,11 @@ interface CollectionPoint {
   longitude: number | null;
 }
 
-interface Report {
-  id_denuncia: number;
-  titulo: string;
-  descricao: string;
-  localizacao: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  foto?: string | null;
-  status: "PENDENTE" | "VALIDADA" | "ENCAMINHADA" | "RESOLVIDA";
-  data_criacao: string;
-  validacoes: {
-    id_validacao: number;
-    id_usuario: number;
-    tipo_validacao: "CONFIRMAR" | "CONTESTAR";
-    data_validacao: string;
-  }[];
-}
+
 
 
 export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
+  const [reports, setReports] = useState<Report[]>([]);
   const [activeTab, setActiveTab] = useState('map');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
@@ -82,6 +70,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [pointError, setPointError] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [newReport, setNewReport] = useState({
+    
 
     title: '',
     description: '',
