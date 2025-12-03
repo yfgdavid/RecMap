@@ -16,8 +16,10 @@ import {
 } from 'recharts';
 import {
   FileText, MapPin, Users, TrendingUp, Download,
-  AlertTriangle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send
+  AlertTriangle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send, Image as ImageIcon
 } from 'lucide-react';
+
+
 import { User } from '../../App';
 
 interface DashboardProps {
@@ -95,6 +97,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     resolvidas: item.resolvidas
   })) || [];
 
+
+
   // Mapear dados de tipos de denúncias para o gráfico de pizza
   const tiposDenunciasData = dashboardData?.graficos.distribuicaoTipos.map(item => {
     const colors: { [key: string]: string } = {
@@ -147,7 +151,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
             titulo: d.titulo,
             regiao: d.localizacao || 'Não informado',
             status: d.status.toLowerCase(),
-            data: new Date(d.data_criacao).toISOString().split('T')[0]
+            data: new Date(d.data_criacao).toISOString().split('T')[0],
+            foto: d.foto || '' // <-- adiciona a foto aqui
           }));
           setReports(denunciasFormatadas);
         }
@@ -182,6 +187,10 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       console.error('Erro ao encaminhar denúncia:', err);
       alert('Erro ao encaminhar denúncia. Tente novamente.');
     }
+  };
+
+  const handleOpenPhoto = (url: string) => {
+    window.open(url, "_blank");
   };
 
   const handleResolveReport = async (reportId: number) => {
@@ -448,7 +457,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 <CardDescription>Últimas denúncias registradas na plataforma</CardDescription>
               </CardHeader>
               <CardContent>
-                {loading && activeTab === 'reports' ? (
+                {loading && activeTab === "reports" ? (
                   <div className="flex items-center justify-center py-12">
                     <p className="text-gray-600">Carregando denúncias...</p>
                   </div>
@@ -460,21 +469,44 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   <div className="space-y-4">
                     {reports.map((report) => {
                       const StatusIcon = getStatusIcon(report.status);
-                      const canTakeAction = report.status !== 'resolvida';
+                      const canTakeAction = report.status !== "resolvida";
 
                       return (
-                        <div key={report.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 gap-3">
+                        <div
+                          key={report.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 gap-3"
+                        >
+                          {/* Info da denúncia */}
                           <div className="flex items-center gap-4 flex-1 min-w-0">
                             <StatusIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
                             <div className="min-w-0 flex-1">
                               <h4 className="font-medium text-[#143D60]">{report.titulo}</h4>
-                              <p className="text-sm text-gray-600">{report.regiao} • {report.data}</p>
+                              <p className="text-sm text-gray-600">
+                                {report.regiao} • {report.data}
+                              </p>
                             </div>
                           </div>
+
+                          {/* Ações */}
                           <div className="flex items-center gap-2 flex-shrink-0">
+                            {/* Status */}
                             <Badge className={`${getStatusColor(report.status)} text-white`}>
                               {report.status}
                             </Badge>
+
+                            {/* Botão Ver Foto só aparece se houver foto */}
+                            {report.foto && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => window.open(report.foto, "_blank")}
+                              >
+                                <ImageIcon className="w-4 h-4" />
+                                Ver Foto
+                              </Button>
+                            )}
+
+                            {/* Dropdown de ações */}
                             {canTakeAction && (
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -487,7 +519,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-56">
-                                  {(report.status === 'pendente' || report.status === 'validada') && (
+                                  {(report.status === "pendente" || report.status === "validada") && (
                                     <DropdownMenuItem
                                       onClick={() => handleForwardReport(report.id)}
                                       className="cursor-pointer"
@@ -496,7 +528,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                                       <span>Encaminhar</span>
                                     </DropdownMenuItem>
                                   )}
-                                  {report.status === 'encaminhada' && (
+                                  {report.status === "encaminhada" && (
                                     <DropdownMenuItem
                                       onClick={() => handleResolveReport(report.id)}
                                       className="cursor-pointer"
@@ -517,6 +549,9 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               </CardContent>
             </Card>
           </TabsContent>
+          );
+
+
 
           {/* Análises */}
           <TabsContent value="analytics" className="space-y-6">
