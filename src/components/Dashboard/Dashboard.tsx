@@ -219,17 +219,23 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     }
   };
 
- const getFotoUrl = (foto: string | undefined) => {
-  if (!foto) return '';
 
-  // Se já for URL completa, retorna direto
-  if (foto.startsWith('http')) return foto;
 
-  const cleanFoto = foto.replace(/^\/+/, '');
-  const baseUrl = API_URL.replace(/\/+$/, '');
-  return `${baseUrl}/${cleanFoto}`;
-};
+  const getFotoUrl = (foto: string | undefined) => {
+    if (!foto) return "";
 
+    // Se já for URL completa (http ou https)
+    if (foto.startsWith("http")) return foto;
+
+    // Remove QUALQUER barra inicial
+    const cleanFoto = foto.replace(/^\/+/, "");
+
+    // Garante que a URL base não tem barra no final
+    const cleanApi = API_URL.replace(/\/+$/, "");
+
+    // Monta a URL final garantindo apenas 1 única barra
+    return `${cleanApi}/uploads/${cleanFoto.replace(/^uploads\//, "")}`;
+  };
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -509,11 +515,11 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                             </Badge>
 
                             {/* Botão Ver Foto só aparece se houver foto */}
-                            {report.foto?.trim() && (
+                            {report.foto && (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => window.open(getFotoUrl(report.foto), "_blank")}
+                                onClick={() => window.open(report.foto, "_blank")}
                                 className="border-[#143D60] text-[#143D60] hover:bg-[#143D60] hover:text-white flex items-center gap-1"
                               >
                                 <ImageIcon className="w-4 h-4" />
