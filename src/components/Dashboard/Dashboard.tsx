@@ -10,17 +10,16 @@ import {
   DropdownMenuTrigger
 } from '../ui/dropdown-menu';
 import { RecMapLogo } from '../RecMapLogo';
-import { LoadingOverlay } from '../LoadingOverlay';
-import { ImageWithThumbnail } from '../ImageWithThumbnail';
-import { getImageUrl } from '../../utils/imageUrl';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
 import {
   FileText, MapPin, Users, TrendingUp, Download,
-  AlertTriangle, AlertCircle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send
+  AlertTriangle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send, Image as ImageIcon
 } from 'lucide-react';
+
+
 import { User } from '../../App';
 
 interface DashboardProps {
@@ -66,7 +65,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [loadingReports, setLoadingReports] = useState(false);
 
   // Buscar dados do dashboard
   useEffect(() => {
@@ -99,6 +97,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     resolvidas: item.resolvidas
   })) || [];
 
+
+
   // Mapear dados de tipos de denúncias para o gráfico de pizza
   const tiposDenunciasData = dashboardData?.graficos.distribuicaoTipos.map(item => {
     const colors: { [key: string]: string } = {
@@ -108,6 +108,9 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       'Esgoto a Céu Aberto': '#EF4444',
       'Outros': '#A0C878'
     };
+
+
+
     return {
       name: item.tipo,
       value: item.porcentagem,
@@ -140,31 +143,24 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        setLoadingReports(true);
         const response = await fetch(`${API_URL}/governamental/denuncias`);
         if (!response.ok) {
           throw new Error('Erro ao carregar denúncias');
         }
         const result = await response.json();
         if (result.success && result.data) {
-          const denunciasFormatadas = result.data.denuncias.map((d: any) => {
-            const fotoUrl = d.foto ? getImageUrl(d.foto) : null;
-            return {
-              id: d.id,
-              titulo: d.titulo,
-              descricao: d.descricao || '',
-              regiao: d.localizacao || 'Não informado',
-              status: d.status.toLowerCase(),
-              data: new Date(d.data_criacao).toISOString().split('T')[0],
-              foto: fotoUrl
-            };
-          });
+          const denunciasFormatadas = result.data.denuncias.map((d: any) => ({
+            id: d.id,
+            titulo: d.titulo,
+            regiao: d.localizacao || 'Não informado',
+            status: d.status.toLowerCase(),
+            data: new Date(d.data_criacao).toISOString().split('T')[0],
+            foto: d.foto || '' // <-- adiciona a foto aqui
+          }));
           setReports(denunciasFormatadas);
         }
       } catch (err) {
         console.error('Erro ao buscar denúncias:', err);
-      } finally {
-        setLoadingReports(false);
       }
     };
 
@@ -196,6 +192,10 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     }
   };
 
+  const handleOpenPhoto = (url: string) => {
+    window.open(url, "_blank");
+  };
+
   const handleResolveReport = async (reportId: number) => {
     try {
       const response = await fetch(`${API_URL}/governamental/denuncias/${reportId}/status`, {
@@ -219,10 +219,9 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     }
   };
 
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {loading && <LoadingOverlay message="Carregando dashboard..." />}
-      {loadingReports && <LoadingOverlay message="Carregando denúncias..." />}
       {/* Header */}
       <header className="bg-[#143D60] text-white shadow-lg">
         <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
@@ -273,7 +272,11 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
           {/* Visão Geral */}
           <TabsContent value="overview" className="space-y-6">
-            {error ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-gray-600">Carregando dados...</p>
+              </div>
+            ) : error ? (
               <div className="flex items-center justify-center py-12">
                 <p className="text-red-600">{error}</p>
               </div>
@@ -385,79 +388,54 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                     <CardContent>
                       {tiposDenunciasData.length > 0 ? (
                         <div className="w-full">
-                          {/* Gráfico de Pizza - Desktop com Labels */}
-                          <div className="hidden md:block">
-                            <ResponsiveContainer width="100%" height={350}>
-                              <PieChart>
-                                <Pie
-                                  data={tiposDenunciasData}
-                                  cx="50%"
-                                  cy="50%"
-                                  outerRadius={80}
-                                  innerRadius={30}
-                                  dataKey="value"
-                                  paddingAngle={3}
-                                  label={({ name, value }) => `${name}: ${value}%`}
-                                  labelLine={{ strokeWidth: 1, stroke: '#94a3b8' }}
-                                >
-                                  {tiposDenunciasData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                  ))}
-                                </Pie>
-                                <Tooltip 
-                                  formatter={(value: number) => [`${value}%`, 'Porcentagem']}
-                                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                                />
-                              </PieChart>
-                            </ResponsiveContainer>
-                          </div>
-
-                          {/* Gráfico de Pizza - Mobile (sem labels para evitar sobreposição) */}
-                          <div className="md:hidden">
-                            <ResponsiveContainer width="100%" height={250}>
-                              <PieChart>
-                                <Pie
-                                  data={tiposDenunciasData}
-                                  cx="50%"
-                                  cy="50%"
-                                  outerRadius={80}
-                                  innerRadius={30}
-                                  dataKey="value"
-                                  paddingAngle={3}
-                                >
-                                  {tiposDenunciasData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                  ))}
-                                </Pie>
-                                <Tooltip 
-                                  formatter={(value: number, name: string, props: any) => [
-                                    `${props.payload.name}: ${value}%`, 
-                                    'Porcentagem'
-                                  ]}
-                                  contentStyle={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px' }}
-                                />
-                              </PieChart>
-                            </ResponsiveContainer>
-                          </div>
-
-                          {/* Legenda Customizada Responsiva - Apenas no Mobile */}
-                          <div className="md:hidden grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 mt-4">
-                            {tiposDenunciasData.map((item, index) => (
-                              <div 
-                                key={index} 
-                                className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-200"
+                          <ResponsiveContainer width="100%" height={280} className="hidden md:block">
+                            <PieChart>
+                              <Pie
+                                data={tiposDenunciasData}
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={90}
+                                dataKey="value"
+                                label={({ name, value }) => `${name}: ${value}%`}
+                                labelLine={{ stroke: '#A0C878', strokeWidth: 1 }}
                               >
+                                {tiposDenunciasData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip />
+                            </PieChart>
+                          </ResponsiveContainer>
+
+                          {/* Versão Mobile - Gráfico Menor */}
+                          <ResponsiveContainer width="100%" height={240} className="md:hidden">
+                            <PieChart>
+                              <Pie
+                                data={tiposDenunciasData}
+                                cx="50%"
+                                cy="50%"
+                                outerRadius={70}
+                                dataKey="value"
+                              >
+                                {tiposDenunciasData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip />
+                            </PieChart>
+                          </ResponsiveContainer>
+
+                          {/* Legenda Customizada Responsiva */}
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                            {tiposDenunciasData.map((item, index) => (
+                              <div key={index} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
                                 <div
-                                  className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex-shrink-0 border-2 border-white shadow-sm mt-0.5"
+                                  className="w-4 h-4 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
                                   style={{ backgroundColor: item.color }}
                                 ></div>
-                                <div className="flex flex-col min-w-0 flex-1">
-                                  <span className="text-xs sm:text-sm font-medium text-[#143D60] break-words leading-tight">
-                                    {item.name}
-                                  </span>
-                                  <span className="text-xs text-gray-600 mt-0.5">
-                                    {item.value}% ({item.quantidade})
-                                  </span>
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-sm font-medium text-[#143D60] truncate">{item.name}</span>
+                                  <span className="text-xs text-gray-600">{item.value}% ({item.quantidade})</span>
                                 </div>
                               </div>
                             ))}
@@ -483,7 +461,11 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 <CardDescription>Últimas denúncias registradas na plataforma</CardDescription>
               </CardHeader>
               <CardContent>
-                {reports.length === 0 ? (
+                {loading && activeTab === "reports" ? (
+                  <div className="flex items-center justify-center py-12">
+                    <p className="text-gray-600">Carregando denúncias...</p>
+                  </div>
+                ) : reports.length === 0 ? (
                   <div className="flex items-center justify-center py-12">
                     <p className="text-gray-500">Nenhuma denúncia encontrada</p>
                   </div>
@@ -491,72 +473,110 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                   <div className="space-y-4">
                     {reports.map((report) => {
                       const StatusIcon = getStatusIcon(report.status);
-                      const canTakeAction = report.status !== 'resolvida';
+                      const canTakeAction = report.status !== "resolvida";
 
-                    return (
-                      <div key={report.id} className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3 md:gap-4 p-4 border rounded-lg hover:bg-gray-50">
-                        {/* Conteúdo principal */}
-                        <div className="flex items-start gap-4 min-w-0">
-                          <StatusIcon className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
-                          <div className="min-w-0 flex-1">
-                            <h4 className="font-medium text-[#143D60] break-words">{report.titulo}</h4>
-                            <p className="text-sm text-gray-600 break-words">{report.regiao} • {report.data}</p>
-                            {report.descricao && (
-                              <p className="text-xs text-gray-500 mt-1 line-clamp-2 break-words">{report.descricao}</p>
+                      return (
+                        <div
+                          key={report.id}
+                          className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded-lg hover:bg-gray-50 gap-3"
+                        >
+                          {/* Info da denúncia */}
+                          <div className="flex items-center gap-4 flex-1 min-w-0">
+                            <StatusIcon className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <h4 className="font-medium text-[#143D60]">{report.titulo}</h4>
+                              <p className="text-sm text-gray-600">
+                                {report.regiao} • {report.data}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Ações */}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {/* Status */}
+                            <Badge className={`${getStatusColor(report.status)} text-white`}>
+                              {report.status}
+                            </Badge>
+
+                            {report.foto && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const win = window.open('', '_blank');
+                                  if (win) {
+                                    win.document.write(`
+                                          <!DOCTYPE html>
+                                          <html>
+                                            <head>
+                                              <title>Foto - RecMap</title>
+                                              <meta charset="utf-8">
+                                              <style>
+                                                body { margin:0; background:#000; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+                                                img { max-width:100%; max-height:100vh; object-fit:contain; }
+                                              </style>
+                                            </head>
+                                            <body>
+                                              <img src="${report.foto}" alt="Foto da denúncia" />
+                                            </body>
+                                          </html>
+                                        `);
+                                    win.document.close();
+                                  }
+                                }}
+                                className="border-[#143D60] text-[#143D60] hover:bg-[#143D60] hover:text-white flex items-center gap-1"
+                              >
+                                <ImageIcon className="w-4 h-4" />
+                                Ver Foto
+                              </Button>
+                            )}
+
+                            {/* Dropdown de ações */}
+                            {canTakeAction && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="border-[#A0C878] text-[#143D60] hover:bg-[#A0C878] hover:text-white"
+                                  >
+                                    <MoreVertical className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                  {(report.status === "pendente" || report.status === "validada") && (
+                                    <DropdownMenuItem
+                                      onClick={() => handleForwardReport(report.id)}
+                                      className="cursor-pointer"
+                                    >
+                                      <Send className="w-4 h-4 mr-2 text-orange-500" />
+                                      <span>Encaminhar</span>
+                                    </DropdownMenuItem>
+                                  )}
+                                  {report.status === "encaminhada" && (
+                                    <DropdownMenuItem
+                                      onClick={() => handleResolveReport(report.id)}
+                                      className="cursor-pointer"
+                                    >
+                                      <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
+                                      <span>Marcar como Resolvida</span>
+                                    </DropdownMenuItem>
+                                  )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             )}
                           </div>
                         </div>
-                        
-                        {/* Botões e badges - sempre alinhados */}
-                        <div className="flex flex-wrap items-center gap-2 justify-end md:justify-start">
-                          {/* Badge de status */}
-                          <Badge className={`${getStatusColor(report.status)} text-white whitespace-nowrap flex-shrink-0`}>
-                            {report.status}
-                          </Badge>
-                          
-                          {/* Menu de ações */}
-                          {canTakeAction && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="flex-shrink-0 border-[#A0C878] text-[#143D60] hover:bg-[#A0C878] hover:text-white"
-                                >
-                                  <MoreVertical className="w-4 h-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-56">
-                                {(report.status === 'pendente' || report.status === 'validada') && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleForwardReport(report.id)}
-                                    className="cursor-pointer"
-                                  >
-                                    <Send className="w-4 h-4 mr-2 text-orange-500" />
-                                    <span>Encaminhar</span>
-                                  </DropdownMenuItem>
-                                )}
-                                {report.status === 'encaminhada' && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleResolveReport(report.id)}
-                                    className="cursor-pointer"
-                                  >
-                                    <CheckCircle className="w-4 h-4 mr-2 text-green-500" />
-                                    <span>Marcar como Resolvida</span>
-                                  </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
+          );
+
+
 
           {/* Análises */}
           <TabsContent value="analytics" className="space-y-6">

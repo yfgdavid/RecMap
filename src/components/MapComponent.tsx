@@ -3,8 +3,6 @@ import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import api from "../services/api";
-import { getImageUrl } from "../utils/imageUrl";
-import { MapMarkerPopup } from "./MapMarkerPopup";
 
 const recifeCenter: [number, number] = [-8.0476, -34.877];
 const recifeBounds: [[number, number], [number, number]] = [
@@ -262,35 +260,29 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
 
         const denuncias: Denuncia[] = data
           .filter((item: any) => item.tipo === "denuncia")
-          .map((d: any, i: number) => {
-            const fotoUrl = d.foto ? getImageUrl(d.foto) : undefined;
-            return {
-              id: d.id,
-              titulo: d.titulo,
-              descricao: d.descricao,
-              latitude: d.latitude + i * 0.00005,
-              longitude: d.longitude + i * 0.00005,
-              status: d.status || "PENDENTE",
-              foto: fotoUrl || undefined,
-              endereco: d.endereco || undefined,
-            };
-          });
+          .map((d: any, i: number) => ({
+            id: d.id,
+            titulo: d.titulo,
+            descricao: d.descricao,
+            latitude: d.latitude + i * 0.00005,
+            longitude: d.longitude + i * 0.00005,
+            status: d.status || "PENDENTE",
+            foto: d.foto || undefined,
+            endereco: d.endereco || undefined,
+          }));
 
         const pontos: PontoColeta[] = data
           .filter((item: any) => item.tipo === "ponto")
-          .map((p: any) => {
-            const fotoUrl = p.foto ? getImageUrl(p.foto) : undefined;
-            return {
-              id: p.id,
-              titulo: p.titulo,
-              descricao: p.descricao,
-              tipo_residuo: p.tipo_residuo || "",
-              latitude: p.latitude,
-              longitude: p.longitude,
-              foto: fotoUrl || undefined,
-              endereco: p.endereco || undefined,
-            };
-          });
+          .map((p: any) => ({
+            id: p.id,
+            titulo: p.titulo,
+            descricao: p.descricao,
+            tipo_residuo: p.tipo_residuo || "",
+            latitude: p.latitude,
+            longitude: p.longitude,
+            foto: p.foto || undefined,
+            endereco: p.endereco || undefined,
+          }));
 
         setDadosMapa({ denuncias, pontos });
       } catch (error) {
@@ -329,32 +321,19 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
       />
 
       {/* Marcadores de Denúncias */}
-      {dadosMapa.denuncias.map((denuncia) => {
-        // Define a cor do marcador baseado no status
-        const getMarkerColor = (status: string) => {
-          const statusLower = status.toLowerCase();
-          if (statusLower === "resolvida") return "#2563EB"; // Azul (resolvido/concluído)
-          if (statusLower === "encaminhada") return "#FFA500"; // Laranja
-          return "#FF2C2C"; // Vermelho (padrão para pendente/validada)
-        };
-
-        return (
-          <Marker
-            key={`den-${denuncia.id}`}
-            position={[denuncia.latitude, denuncia.longitude]}
-            icon={createColoredIcon(getMarkerColor(denuncia.status))}
-          >
-            <Popup>
-              <MapMarkerPopup
-                titulo={denuncia.titulo}
-                descricao={denuncia.descricao}
-                foto={denuncia.foto}
-                status={denuncia.status}
-              />
-            </Popup>
-          </Marker>
-        );
-      })}
+      {dadosMapa.denuncias.map((denuncia) => (
+        <Marker
+          key={`den-${denuncia.id}`}
+          position={[denuncia.latitude, denuncia.longitude]}
+          icon={createColoredIcon(
+            denuncia.status.toLowerCase() === "encaminhada" ? "#FFA500" : "#FF2C2C"
+          )}
+        >
+          <Popup>
+            <DenunciaPopup denuncia={denuncia} />
+          </Popup>
+        </Marker>
+      ))}
 
       {/* Marcadores de Pontos de Coleta */}
       {dadosMapa.pontos.map((ponto) => (
@@ -364,12 +343,7 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
           icon={createColoredIcon("#069240")}
         >
           <Popup>
-            <MapMarkerPopup
-              titulo={ponto.titulo}
-              descricao={ponto.descricao}
-              foto={ponto.foto}
-              tipoResiduo={ponto.tipo_residuo}
-            />
+            <PontoPopup ponto={ponto} />
           </Popup>
         </Marker>
       ))}

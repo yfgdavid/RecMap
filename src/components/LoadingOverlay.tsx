@@ -7,8 +7,8 @@ interface LoadingOverlayProps {
 
 export function LoadingOverlay({ message = 'Carregando...' }: LoadingOverlayProps) {
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
-      <div className="bg-white rounded-lg p-6 sm:p-8 shadow-2xl flex flex-col items-center space-y-4 sm:space-y-6 min-w-[240px] sm:min-w-[280px] mx-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-8 shadow-2xl flex flex-col items-center space-y-6 min-w-[280px]">
         {/* Círculo de carregamento girando - PRINCIPAL */}
         <div className="relative flex items-center justify-center">
           {/* Círculo externo girando */}
