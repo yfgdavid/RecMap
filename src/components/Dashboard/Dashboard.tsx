@@ -220,10 +220,12 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   };
 
   const getFotoUrl = (foto: string | undefined) => {
-    if (!foto) return '';
-    if (foto.startsWith('http')) return foto;
-    return `${API_URL}/uploads/${foto}`;
-  };
+  if (!foto) return '';
+  if (foto.startsWith('http')) return foto;
+  // Remove barra final do API_URL, se houver
+  const base = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+  return `${base}/uploads/${foto}`;
+};
 
   return (
     <div className="min-h-screen bg-gray-50">
