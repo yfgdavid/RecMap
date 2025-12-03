@@ -219,19 +219,14 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     }
   };
 
-  const getFotoUrl = (foto: string | undefined) => {
+ const getFotoUrl = (foto: string | undefined) => {
   if (!foto) return '';
-  
+
   // Se já for URL completa, retorna direto
   if (foto.startsWith('http')) return foto;
 
-  // Remove barra inicial se houver
-  const cleanFoto = foto.startsWith('/') ? foto.slice(1) : foto;
-
-  // Remove barra final do API_URL se houver
-  const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
-
-  // Junta de forma segura
+  const cleanFoto = foto.replace(/^\/+/, '');
+  const baseUrl = API_URL.replace(/\/+$/, '');
   return `${baseUrl}/${cleanFoto}`;
 };
 
