@@ -108,6 +108,9 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       'Esgoto a Céu Aberto': '#EF4444',
       'Outros': '#A0C878'
     };
+
+
+
     return {
       name: item.tipo,
       value: item.porcentagem,
@@ -214,6 +217,12 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
       console.error('Erro ao resolver denúncia:', err);
       alert('Erro ao resolver denúncia. Tente novamente.');
     }
+  };
+
+  const getFotoUrl = (foto: string | undefined) => {
+    if (!foto) return '';
+    if (foto.startsWith('http')) return foto;
+    return `${API_URL}/uploads/${foto}`;
   };
 
   return (
@@ -495,17 +504,17 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                             </Badge>
 
                             {/* Botão Ver Foto só aparece se houver foto */}
-                            {report.foto && (
+                            {report.foto?.trim() && (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => window.open(report.foto, "_blank")}
+                                onClick={() => window.open(getFotoUrl(report.foto), "_blank")}
+                                className="border-[#143D60] text-[#143D60] hover:bg-[#143D60] hover:text-white flex items-center gap-1"
                               >
                                 <ImageIcon className="w-4 h-4" />
                                 Ver Foto
                               </Button>
                             )}
-
                             {/* Dropdown de ações */}
                             {canTakeAction && (
                               <DropdownMenu>
