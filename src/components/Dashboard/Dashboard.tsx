@@ -220,22 +220,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   };
 
 
-
-  const getFotoUrl = (foto: string | undefined) => {
-    if (!foto) return "";
-
-    // Se já for URL completa (http ou https)
-    if (foto.startsWith("http")) return foto;
-
-    // Remove QUALQUER barra inicial
-    const cleanFoto = foto.replace(/^\/+/, "");
-
-    // Garante que a URL base não tem barra no final
-    const cleanApi = API_URL.replace(/\/+$/, "");
-
-    // Monta a URL final garantindo apenas 1 única barra
-    return `${cleanApi}/uploads/${cleanFoto.replace(/^uploads\//, "")}`;
-  };
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -514,18 +498,39 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                               {report.status}
                             </Badge>
 
-                            {/* Botão Ver Foto só aparece se houver foto */}
                             {report.foto && (
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => window.open(report.foto, "_blank")}
+                                onClick={() => {
+                                  const win = window.open('', '_blank');
+                                  if (win) {
+                                    win.document.write(`
+                                          <!DOCTYPE html>
+                                          <html>
+                                            <head>
+                                              <title>Foto - RecMap</title>
+                                              <meta charset="utf-8">
+                                              <style>
+                                                body { margin:0; background:#000; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+                                                img { max-width:100%; max-height:100vh; object-fit:contain; }
+                                              </style>
+                                            </head>
+                                            <body>
+                                              <img src="${report.foto}" alt="Foto da denúncia" />
+                                            </body>
+                                          </html>
+                                        `);
+                                    win.document.close();
+                                  }
+                                }}
                                 className="border-[#143D60] text-[#143D60] hover:bg-[#143D60] hover:text-white flex items-center gap-1"
                               >
                                 <ImageIcon className="w-4 h-4" />
                                 Ver Foto
                               </Button>
                             )}
+
                             {/* Dropdown de ações */}
                             {canTakeAction && (
                               <DropdownMenu>
