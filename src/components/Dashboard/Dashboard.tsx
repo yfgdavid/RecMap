@@ -64,6 +64,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingReports, setLoadingReports] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Buscar dados do dashboard
@@ -143,6 +144,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
   useEffect(() => {
     const fetchReports = async () => {
       try {
+        setLoadingReports(true);
         const response = await fetch(`${API_URL}/governamental/denuncias`);
         if (!response.ok) {
           throw new Error('Erro ao carregar denúncias');
@@ -161,6 +163,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         }
       } catch (err) {
         console.error('Erro ao buscar denúncias:', err);
+      } finally {
+        setLoadingReports(false);
       }
     };
 
@@ -272,11 +276,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
           {/* Visão Geral */}
           <TabsContent value="overview" className="space-y-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <p className="text-gray-600">Carregando dados...</p>
-              </div>
-            ) : error ? (
+            {error ? (
               <div className="flex items-center justify-center py-12">
                 <p className="text-red-600">{error}</p>
               </div>
@@ -388,54 +388,92 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                     <CardContent>
                       {tiposDenunciasData.length > 0 ? (
                         <div className="w-full">
-                          <ResponsiveContainer width="100%" height={280} className="hidden md:block">
-                            <PieChart>
-                              <Pie
-                                data={tiposDenunciasData}
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={90}
-                                dataKey="value"
-                                label={({ name, value }) => `${name}: ${value}%`}
-                                labelLine={{ stroke: '#A0C878', strokeWidth: 1 }}
-                              >
-                                {tiposDenunciasData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </Pie>
-                              <Tooltip />
-                            </PieChart>
-                          </ResponsiveContainer>
+                          {/* Gráfico de Pizza - Desktop */}
+                          <div className="hidden md:block">
+                            <ResponsiveContainer width="100%" height={280}>
+                              <PieChart>
+                                <Pie
+                                  data={tiposDenunciasData}
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius={90}
+                                  innerRadius={30}
+                                  dataKey="value"
+                                  paddingAngle={3}
+                                >
+                                  {tiposDenunciasData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                  ))}
+                                </Pie>
+                                <Tooltip 
+                                  content={({ active, payload }) => {
+                                    if (!active || !payload || !payload.length) return null;
+                                    const data = payload[0].payload;
+                                    return (
+                                      <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '8px 12px' }}>
+                                        <p style={{ margin: 0, color: '#143D60', fontWeight: 500 }}>
+                                          {data.name}: {data.value}% ({data.quantidade} denúncias)
+                                        </p>
+                                      </div>
+                                    );
+                                  }}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
 
-                          {/* Versão Mobile - Gráfico Menor */}
-                          <ResponsiveContainer width="100%" height={240} className="md:hidden">
-                            <PieChart>
-                              <Pie
-                                data={tiposDenunciasData}
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={70}
-                                dataKey="value"
-                              >
-                                {tiposDenunciasData.map((entry, index) => (
-                                  <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                              </Pie>
-                              <Tooltip />
-                            </PieChart>
-                          </ResponsiveContainer>
+                          {/* Gráfico de Pizza - Mobile */}
+                          <div className="md:hidden">
+                            <ResponsiveContainer width="100%" height={240}>
+                              <PieChart>
+                                <Pie
+                                  data={tiposDenunciasData}
+                                  cx="50%"
+                                  cy="50%"
+                                  outerRadius={70}
+                                  innerRadius={20}
+                                  dataKey="value"
+                                  paddingAngle={3}
+                                >
+                                  {tiposDenunciasData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                  ))}
+                                </Pie>
+                                <Tooltip 
+                                  content={({ active, payload }) => {
+                                    if (!active || !payload || !payload.length) return null;
+                                    const data = payload[0].payload;
+                                    return (
+                                      <div style={{ backgroundColor: '#fff', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '8px 12px' }}>
+                                        <p style={{ margin: 0, color: '#143D60', fontWeight: 500 }}>
+                                          {data.name}: {data.value}% ({data.quantidade} denúncias)
+                                        </p>
+                                      </div>
+                                    );
+                                  }}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
 
-                          {/* Legenda Customizada Responsiva */}
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                          {/* Legenda Customizada Responsiva - Desktop e Mobile */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 mt-6">
                             {tiposDenunciasData.map((item, index) => (
-                              <div key={index} className="flex items-center gap-2 p-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                              <div 
+                                key={index} 
+                                className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors border border-gray-200"
+                              >
                                 <div
-                                  className="w-4 h-4 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
+                                  className="w-4 h-4 sm:w-5 sm:h-5 rounded-full flex-shrink-0 border-2 border-white shadow-sm mt-0.5"
                                   style={{ backgroundColor: item.color }}
                                 ></div>
-                                <div className="flex flex-col min-w-0">
-                                  <span className="text-sm font-medium text-[#143D60] truncate">{item.name}</span>
-                                  <span className="text-xs text-gray-600">{item.value}% ({item.quantidade})</span>
+                                <div className="flex flex-col min-w-0 flex-1">
+                                  <span className="text-xs sm:text-sm font-medium text-[#143D60] break-words leading-tight">
+                                    {item.name}
+                                  </span>
+                                  <span className="text-xs text-gray-600 mt-0.5">
+                                    {parseFloat(item.value.toString()).toFixed(0)}% ({parseInt(item.quantidade.toString())} denúncias)
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -461,11 +499,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 <CardDescription>Últimas denúncias registradas na plataforma</CardDescription>
               </CardHeader>
               <CardContent>
-                {loading && activeTab === "reports" ? (
-                  <div className="flex items-center justify-center py-12">
-                    <p className="text-gray-600">Carregando denúncias...</p>
-                  </div>
-                ) : reports.length === 0 ? (
+                {reports.length === 0 && !loadingReports ? (
                   <div className="flex items-center justify-center py-12">
                     <p className="text-gray-500">Nenhuma denúncia encontrada</p>
                   </div>
