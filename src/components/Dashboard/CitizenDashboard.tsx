@@ -12,7 +12,6 @@ import { HistoryTimeline } from '../Education/HistoryTimeline';
 import { RecMapLogo } from '../RecMapLogo';
 import { useEffect } from 'react';
 import { LocationInput } from '../LocationInput';
-import { LoadingOverlay } from '../LoadingOverlay';
 import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import type { Report } from '../../types/report';
 
@@ -285,8 +284,6 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {isInitialLoading && <LoadingOverlay message="Carregando dados do mapa..." />}
-      {(isLoading && !validatingReportId) && <LoadingOverlay message={loadingMessage} />}
       {/* Header */}
       <header className="bg-[#143D60] text-white shadow-lg">
         <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
