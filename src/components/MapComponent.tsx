@@ -326,7 +326,9 @@ const MapComponent = ({ selectedLocation }: MapComponentProps) => {
           key={`den-${denuncia.id}`}
           position={[denuncia.latitude, denuncia.longitude]}
           icon={createColoredIcon(
+            denuncia.status.toLowerCase() === "resolvida" ? "#3B82F6" :
             denuncia.status.toLowerCase() === "encaminhada" ? "#FFA500" : "#FF2C2C"
+            
           )}
         >
           <Popup>
