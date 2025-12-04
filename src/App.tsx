@@ -4,6 +4,7 @@ import { AuthForm } from './components/Auth/AuthForm';
 import { Dashboard } from './components/Dashboard/Dashboard';
 import { CitizenDashboard } from './components/Dashboard/CitizenDashboard';
 import { LoadingScreen } from './components/LoadingScreen';
+import { TransitionLoading } from './components/TransitionLoading';
 import { Toaster } from './components/ui/sonner';
 
 export type UserType = 'citizen' | 'government' | null;
@@ -22,6 +23,7 @@ function AppContent() {
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [resetToken, setResetToken] = useState<string | null>(null);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   // Restaura sessão do localStorage ao carregar a página
   useEffect(() => {
@@ -98,8 +100,18 @@ function AppContent() {
 
   // Função para atualizar o usuário e salvar no localStorage
   const handleUserUpdate = (user: User) => {
-    setCurrentUser(user);
-    localStorage.setItem('user', JSON.stringify(user));
+    // Ativa o loading de transição
+    setIsTransitioning(true);
+    
+    // Após um pequeno delay, atualiza o usuário e desativa o loading
+    setTimeout(() => {
+      setCurrentUser(user);
+      localStorage.setItem('user', JSON.stringify(user));
+      // Mantém o loading por mais um pouco para uma transição suave
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 500);
+    }, 300);
   };
 
   const handleBackToLanding = () => {
@@ -169,6 +181,11 @@ function AppContent() {
         <Toaster />
       </>
     );
+  }
+
+  // Mostra loading de transição durante a mudança para dashboard
+  if (isTransitioning) {
+    return <TransitionLoading message="Carregando aplicação..." />;
   }
 
   // Dashboard
