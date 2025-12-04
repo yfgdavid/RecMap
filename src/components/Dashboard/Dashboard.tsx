@@ -16,9 +16,8 @@ import {
 } from 'recharts';
 import {
   FileText, MapPin, Users, TrendingUp, Download,
-  AlertTriangle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send, Image as ImageIcon
+  AlertTriangle, CheckCircle, Clock, Leaf, LogOut, MoreVertical, Send, Image as ImageIcon, Loader2
 } from 'lucide-react';
-
 
 import { User } from '../../App';
 
@@ -223,6 +222,41 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
     }
   };
 
+  // Componente de loading reutilizável
+  const renderLoading = () => (
+    <div className="flex items-center justify-center min-h-[400px] w-full relative">
+      <div className="bg-white rounded-lg p-8 shadow-2xl flex flex-col items-center space-y-6 min-w-[280px]">
+        {/* Círculo de carregamento girando */}
+        <div className="relative flex items-center justify-center">
+          <div 
+            className="w-16 h-16 rounded-full border-4 border-transparent border-t-[#143D60] border-r-[#143D60]"
+            style={{
+              animation: 'spin 1s linear infinite',
+            }}
+          ></div>
+          <div 
+            className="absolute w-12 h-12 rounded-full border-4 border-transparent border-b-[#A0C878] border-l-[#A0C878]"
+            style={{
+              animation: 'spin 0.8s linear infinite reverse',
+            }}
+          ></div>
+          <Loader2 className="absolute w-8 h-8 text-[#143D60] animate-spin" style={{ animationDuration: '1s' }} />
+        </div>
+        <div className="flex flex-col items-center space-y-2">
+          <p className="text-[#143D60] font-semibold text-lg">Carregando dashboard...</p>
+          <p className="text-gray-500 text-sm text-center">
+            Sua conexão pode estar lenta. Aguarde...
+          </p>
+        </div>
+        <style>{`
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -256,7 +290,6 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
         </div>
       </header>
 
-
       <div className="container mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-4 bg-white shadow-sm">
@@ -280,6 +313,8 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
               <div className="flex items-center justify-center py-12">
                 <p className="text-red-600">{error}</p>
               </div>
+            ) : loading ? (
+              renderLoading()
             ) : (
               <>
                 {/* KPIs */}
@@ -355,32 +390,32 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
                 {/* Gráficos */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-[#143D60]">Denúncias por Mês</CardTitle>
-                      <CardDescription>Evolução das denúncias e resoluções</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {reportsData.length > 0 ? (
-                        <ResponsiveContainer width="100%" height={300}>
-                          <BarChart data={reportsData}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="month" />
-                            <YAxis />
-                            <Tooltip />
-                            <Bar dataKey="denuncias" fill="#143D60" name="Denúncias" />
-                            <Bar dataKey="resolvidas" fill="#A0C878" name="Resolvidas" />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="flex items-center justify-center h-[300px]">
-                          <p className="text-gray-500">Sem dados disponíveis</p>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-[#143D60]">Denúncias por Mês</CardTitle>
+                        <CardDescription>Evolução das denúncias e resoluções</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        {reportsData.length > 0 ? (
+                          <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={reportsData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="month" />
+                              <YAxis />
+                              <Tooltip />
+                              <Bar dataKey="denuncias" fill="#143D60" name="Denúncias" />
+                              <Bar dataKey="resolvidas" fill="#A0C878" name="Resolvidas" />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        ) : (
+                          <div className="flex items-center justify-center h-[300px]">
+                            <p className="text-gray-500">Sem dados disponíveis</p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
 
-                  <Card>
+                    <Card>
                     <CardHeader>
                       <CardTitle className="text-[#143D60]">Denúncias</CardTitle>
                       <CardDescription>Distribuição das denúncias por tipo</CardDescription>
@@ -493,13 +528,16 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
 
           {/* Denúncias */}
           <TabsContent value="reports" className="space-y-6">
+            {loadingReports ? (
+              renderLoading()
+            ) : (
             <Card>
               <CardHeader>
                 <CardTitle className="text-[#143D60]">Denúncias Recentes</CardTitle>
                 <CardDescription>Últimas denúncias registradas na plataforma</CardDescription>
               </CardHeader>
               <CardContent>
-                {reports.length === 0 && !loadingReports ? (
+                {reports.length === 0 ? (
                   <div className="flex items-center justify-center py-12">
                     <p className="text-gray-500">Nenhuma denúncia encontrada</p>
                   </div>
@@ -607,13 +645,14 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 )}
               </CardContent>
             </Card>
+            )}
           </TabsContent>
-          );
-
-
 
           {/* Análises */}
           <TabsContent value="analytics" className="space-y-6">
+            {loading ? (
+              renderLoading()
+            ) : (
             <Card>
               <CardHeader>
                 <CardTitle className="text-[#143D60]">Tendência de Resolução</CardTitle>
@@ -650,9 +689,13 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 )}
               </CardContent>
             </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="exports" className="flex justify-center">
+            {loading ? (
+              renderLoading()
+            ) : (
             <div className="w-full max-w-xl">
               <Card className="p-6">
                 <CardHeader>
@@ -686,6 +729,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                 </CardContent>
               </Card>
             </div>
+            )}
           </TabsContent>
 
 
