@@ -1,3 +1,5 @@
+// Componente de overlay de carregamento com animação personalizada
+
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 

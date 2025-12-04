@@ -1,4 +1,6 @@
 import React from 'react';
+// Componente de landing page principal do RecMap
+
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { MapPin, Users, FileText } from 'lucide-react';

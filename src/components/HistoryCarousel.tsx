@@ -1,3 +1,6 @@
+
+// Componente de carrossel para exibir linha do tempo histórica - usado no CitizenDashboard (Aprender)
+
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from './ui/card';

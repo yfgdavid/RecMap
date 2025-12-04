@@ -1,3 +1,5 @@
+// Componente principal da aplicação Rec'Map, gerenciando autenticação e navegação entre telas
+
 import React, { useState, useEffect } from 'react';
 import { Landing } from './components/Landing';
 import { AuthForm } from './components/Auth/AuthForm';

@@ -1,3 +1,5 @@
+// Definição de tipos para uma denúncia no sistema Rec'Map
+
 export interface Report {
   id_denuncia: number;
   titulo: string;

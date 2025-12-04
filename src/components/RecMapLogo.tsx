@@ -1,3 +1,5 @@
+// Componente de logo do Rec'Map com suporte a variações de tamanho e tema claro/escuro
+
 import React from 'react';
 import logoDark from 'figma:asset/d034c51a4e20b0eb04a51662e3df963e95be5ff9.png';
 import logoLight from 'figma:asset/a5cfd4c610c77d4585f792b2f83ee6531d12839e.png';

@@ -1,3 +1,5 @@
+// Componente de input de localização com sugestões de endereços usando Nominatim
+
 import { useState, useEffect } from "react";
 import { Input } from "./ui/input";
 

@@ -1,3 +1,5 @@
+// Componente de mapa interativo com Leaflet, exibindo denúncias e pontos de coleta
+
 import React, { useState, useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";

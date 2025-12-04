@@ -1,3 +1,5 @@
+// Componente de tela de carregamento com animação personalizada
+
 import React from 'react';
 import { RecMapLogo } from './RecMapLogo';
 import { Loader2 } from 'lucide-react';

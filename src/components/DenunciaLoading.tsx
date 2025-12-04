@@ -1,5 +1,5 @@
 import React from 'react';
-
+// Componente de loading para exibição durante carregamento de denúncias
 interface DenunciaLoadingProps {
   message?: string;
 }
