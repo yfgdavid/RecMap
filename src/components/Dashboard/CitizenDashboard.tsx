@@ -32,6 +32,7 @@ import 'leaflet/dist/leaflet.css';
 
 
 import MapComponent from '../../components/MapComponent';
+import { DenunciaLoading } from '../DenunciaLoading';
 
 interface CitizenDashboardProps {
   user: User;
@@ -233,6 +234,8 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
   const handleValidateReport = async (reportId: number, vote: 'confirm' | 'reject') => {
     setValidatingReportId(reportId);
+    setLoadingMessage(vote === 'confirm' ? 'Carregando validação...' : 'Carregando contestação...');
+    setIsLoading(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/validacoes`, {
         method: 'POST',
@@ -272,6 +275,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
       setTimeout(() => setValidationError(null), 5000);
     } finally {
       setValidatingReportId(null);
+      setIsLoading(false);
     }
   };
 
@@ -283,6 +287,9 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Loading overlay para denúncia */}
+      {isLoading && <DenunciaLoading message={loadingMessage} />}
+      
       {/* Header */}
       <header className="bg-[#143D60] text-white shadow-lg">
         <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
@@ -517,7 +524,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     try {
                       setReportError(null);
                       setReportSuccess(null);
-                      setLoadingMessage('Enviando denúncia...');
+                      setLoadingMessage('Carregando denúncia...');
                       setIsLoading(true);
 
                       const res = await fetch(`${import.meta.env.VITE_API_URL}/denuncias`, {
@@ -704,7 +711,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                     if (newRegister.image) formData.append("foto", newRegister.image);
 
                     try {
-                      setLoadingMessage('Registrando ponto de coleta...');
+                      setLoadingMessage('Carregando ponto de coleta...');
                       setIsLoading(true);
 
                       const res = await fetch(`${import.meta.env.VITE_API_URL}/pontos`, {
