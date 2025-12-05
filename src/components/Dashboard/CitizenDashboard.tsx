@@ -14,6 +14,8 @@ import { useEffect } from 'react';
 import { LocationInput } from '../LocationInput';
 import { ChevronLeft, ChevronRight, PlusCircle } from "lucide-react";
 import type { Report } from '../../types/report';
+import { Image as ImageIcon } from 'lucide-react';
+
 
 
 
@@ -69,7 +71,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
   const [pointError, setPointError] = useState<string | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [newReport, setNewReport] = useState({
-    
+
 
     title: '',
     description: '',
@@ -289,7 +291,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
     <div className="min-h-screen bg-gray-50">
       {/* Loading overlay para denúncia */}
       {isLoading && <DenunciaLoading message={loadingMessage} />}
-      
+
       {/* Header */}
       <header className="bg-[#143D60] text-white shadow-lg">
         <div className="container mx-auto px-3 sm:px-4 h-16 flex items-center justify-between">
@@ -973,6 +975,39 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
                                 <span>Validando...</span>
                               </div>
                             )}
+                            {/* Botão Ver Foto */}
+                            {report.foto && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  const win = window.open('', '_blank');
+                                  if (win) {
+                                    win.document.write(`
+                            <!DOCTYPE html>
+                            <html>
+                              <head>
+                                <title>Foto - RecMap</title>
+                                <meta charset="utf-8">
+                                <style>
+                                  body { margin:0; background:#000; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+                                  img { max-width:100%; max-height:100vh; object-fit:contain; }
+                                </style>
+                              </head>
+                              <body>
+                                <img src="${report.foto}" alt="Foto da denúncia" />
+                              </body>
+                            </html>
+                          `);
+                                    win.document.close();
+                                  }
+                                }}
+                                className="border-[#143D60] text-[#143D60] hover:bg-[#143D60] hover:text-white flex items-center gap-1"
+                              >
+                                <ImageIcon className="w-4 h-4" />
+                                Ver Foto
+                              </Button>
+                            )}
                             <Button
                               size="sm"
                               variant="outline"
@@ -999,6 +1034,7 @@ export function CitizenDashboard({ user, onLogout }: CitizenDashboardProps) {
               </CardContent>
             </Card>
           </TabsContent>
+
 
           {/* Educação */}
           <TabsContent value="education" className="space-y-6">

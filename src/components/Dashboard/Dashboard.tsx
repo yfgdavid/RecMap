@@ -569,7 +569,7 @@ export function Dashboard({ user, onLogout }: DashboardProps) {
                             <Badge className={`${getStatusColor(report.status)} text-white`}>
                               {report.status}
                             </Badge>
-
+                          {/* Botão Ver Foto */}
                             {report.foto && (
                               <Button
                                 size="sm"
