@@ -39,11 +39,11 @@ Interface web do RecMap, plataforma de mapeamento de resíduos urbanos, denúnci
 
 ## 📦 Instalação
 
-git clone https://github.com/yfgdavid/RecMap-Frontend
-cd RecMap-Frontend
-npm install
-cp .env.example .env
-npm run dev
+- git clone https://github.com/yfgdavid/RecMap-Frontend
+- cd RecMap-Frontend
+- npm install
+- cp .env.example .env
+- npm run dev
 
 text
 
@@ -63,11 +63,17 @@ text
 ## 📁 Estrutura do Projeto
 
 src/
+
 ├── components/ # Componentes React
+
 ├── pages/ # Páginas da aplicação
+
 ├── services/ # Serviços e APIs
+
 ├── types/ # Tipos TypeScript
+
 ├── utils/ # Funções utilitárias
+
 └── App.tsx # Componente principal
 
 text
